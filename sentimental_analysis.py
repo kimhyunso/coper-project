@@ -7,6 +7,7 @@ import re
 from konlpy.tag import Okt
 from collections import Counter
 from wordcloud import WordCloud
+from sklearn.feature_extraction.text import CountVectorizer
 
 import warnings
 
@@ -15,8 +16,18 @@ warnings.filterwarnings("ignore")
 
 
 # result 변수 반환
-# 사용법 : apply_regular_expression(df['text'][숫자])
-def apply_regular_expression(text):
+def apply_regular_expression(text:str) -> str:
+    """
+    정규표현식을 적용한 str 객체를 반환한다.
+
+    파라미터
+
+    text : 문장 한 줄을 인자로 받아, 정규표현식을 적용한다.
+
+    사용예
+
+    apply_regular_expression(df['text'][숫자])
+    """
     import re
     hangul = re.compile('[^ ㄱ-ㅣ가-힣]')
     result = hangul.sub('', text)
@@ -24,44 +35,113 @@ def apply_regular_expression(text):
 
 
 # nouns 변수 반환
-# 사용법 : returnNouns(df) <-- ['text']는 쓰지말것.
-def returnNouns(dataframe):
+def return_nouns(sentence:str) -> list:
+    """
+    문장 한 줄을 명사(nouns) 단위로 분해한 리스트를 반환한다. 
+    예를 들어, '여행에 집중할수 있게 편안한 휴식을 제공하는 호텔이었습니다' 를 입력 받으면
+    ['여행', '집중', '휴식', '제공', '호텔'] 을 반환한다.
+
+    파라미터
+
+    sentence : 문장 한 줄을 인자로 받는다.
+
+    사용예
+
+    return_nouns(df['text'][0])
+    > ['여행', '집중', '휴식', '제공', '호텔', '위치', '선정', '또한', '청소', '청결', '상태']
+
+    nouns_tagger.nouns(apply_regular_expression("".join(sentence['text'].tolist())))
+    > [ '스테이', '위치', '신라', ~~~~~ '스타벅스', '번화가', '전',]
+    """
     from konlpy.tag import Okt
     nouns_tagger = Okt()
-    nouns = nouns_tagger.nouns(apply_regular_expression("".join(dataframe['text'].tolist())))
+    nouns = nouns_tagger.nouns(apply_regular_expression(sentence))
     return nouns
 
 
-# nouns_tagger 변수 반환
-# 이거 뒤에가서 씀.
-def returnNouns_tagger():
-    nouns_tagger = Okt()
-    return nouns_tagger
-
-
 # counter 변수 반환
-def returnCounter(nouns):
+def return_counter(nouns:list) -> list:
+    """
+    명사 리스트에서 각 명사의 갯수가 몇개인지 반환한다.
+    반환값은 기본적으로 list이지만 list 내부는 ('명사', 갯수)의 튜플 형태이다.
+    자세한 건 사용예 참조.
+    
+    파라미터
+
+    nouns : 명사 리스트를 인자로 받는다.
+
+    사용예
+
+    return_counter(nouns).most_common(10)
+    > 
+    [('호텔', 803),
+    ('수', 498),
+    ('것', 436),
+    ('방', 330),
+    ('위치', 328),
+    ('우리', 327),
+    ('곳', 320),
+    ('공항', 307),
+    ('직원', 267),
+    ('매우', 264)]
+    """
     counter = Counter(nouns)
     return counter
 
 
-# available_counter 변수 반환
-# 사용법 : removeOneLetterNoun(counter)
-def removeOneLetterNoun(counter):
+# 
+# 사용법 : remove_one_letter_noun(counter)
+def remove_one_letter_noun(counter:list) -> list:
+    """
+    한 글자 명사를 제거한 list 객체를 반환한다. 
+    리스트 내포의 결과값 예시
+
+    > x : counter[x] = '타일' : 3
+
+    파라미터
+
+    counter : Collections.Counter 메소드에 의해 처리된 list값을 인자로 받는다.
+    즉, '단어' : 갯수 튜플로 감싸진 리스트 형태이다.
+
+    사용법
+    remove_one_letter_noun(counter).most_common(10)
+    > 
+    [('호텔', 803),
+    ('위치', 328),
+    ('우리', 327),
+    ('공항', 307),
+    ('직원', 267),
+    ('매우', 264),
+    ('가격', 245),
+    ('객실', 244),
+    ('시설', 215),
+    ('제주', 192)]
+    """
     available_counter = Counter({x: counter[x] for x in counter if len(x) > 1})
     return available_counter
 
 
-def addStopwords(stopwords):
-    stopwords = pd.read_csv(
-        "https://raw.githubusercontent.com/yoonkt200/FastCampusDataset/master/korean_stopwords.txt").values.tolist()
-    jeju_list = ['제주', '제주도', '호텔', '리뷰', '숙소', '여행', '트립']
-    for word in jeju_list:
+# 불용어 리스트 추가
+# 사용법 : add_stopwords(['이거', '저거', '호텔'])
+def add_stopwords(stopwords_txt:object, stopwords_list:list) -> list:
+    """
+    원하는 불용어가 추가된 불용어 리스트를 반환한다.
+    
+    파라미터
+    stopwords_txt = 불용어 리스트(korean_stopwords.txt)를 txt파일로 받는다.
+    stopwords_list : stopwords에 불용어를 추가한다. 이 인자는 반드시 리스트로 받아야 한다.
+
+    사용예)
+    add_stopwords(['이거', '영상', '유튜브'])
+    """
+    stopwords = pd.read_csv(stopwords_txt).values.tolist()
+    for word in stopwords_list:
         stopwords.append(word)
     return stopwords
 
 
 # 정규 표현식 + 불용어 처리
+# 사용법 : 
 def text_cleaning(text, stopwords):
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
     result = hangul.sub('', str(text))
@@ -72,34 +152,34 @@ def text_cleaning(text, stopwords):
     return nouns
 
 
-def returnVect(text_cleaning):
-    from sklearn.feature_extraction.text import CountVectorizer
+# 
+def return_vect(text_cleaning):
     vect = CountVectorizer(tokenizer=lambda x: text_cleaning(x))
     return vect
 
 
-def returnBow_vect(vect, dataframe):
+def return_bow_vect(vect, dataframe):
     bow_vect = vect.fit_transform(dataframe['text'].tolist())
     return bow_vect
 
 
-def returnWord_list(vect):
+def return_word_list(vect):
     word_list = vect.get_feature_names()
     return word_list
 
 
-def returnCount_list(bow_vect):
+def return_count_list(bow_vect):
     count_list = bow_vect.toarray().sum(axis=0)
     return count_list
 
 
-def returnWordCountDict(word_list, count_list):
+def return_word_count_dict(word_list, count_list):
     word_count_dict = dict(zip(word_list, count_list))
     return word_count_dict
 
 
 # IF-IDF 생성
-def returnTFIDF_Vectorizer():
+def return_TFIDF_vectorizer():
     from sklearn.feature_extraction.text import TfidfTransformer
     tfidf_vectorizer = TfidfTransformer()
     return tfidf_vectorizer
