@@ -24,8 +24,9 @@ class YoutubeBulider:
         self.__key = api_key
         self.__youtube = build(__PLATFORM, __VERSION, developerKey=self.get_key)
 
-    def get_comment_threads(self, *part, videoId, maxResults=20):
+    def get_comment_threads(self, *part, videoId, maxResults=20) -> list:
         '''
+        > return list
         https://developers.google.com/youtube/v3/docs/commentThreads/list
         Args:
             *part : id, replies, snippet - 필수매개변수
@@ -33,11 +34,12 @@ class YoutubeBulider:
         Attributes:
             response : commentThreads에서 목록의 쿼리를 날려서 결과를 도출
         '''
-        __response = self.get_youtube().commentThreads().list(part=f'{part[0]},{part[1]}', videoId=videoId, maxResults=maxResults).execute()
-        return __response
+        self.__response = self.get_youtube().commentThreads().list(part=f'{part[0]},{part[1]}', videoId=videoId, maxResults=maxResults).execute()
+        return self.get_response()
     
-    def get_video(self, chart='mostPopular', regionCode='kr', *part):
+    def get_videos(self, chart='mostPopular', regionCode='kr', *part) -> list:
         '''
+        > return list
         https://developers.google.com/youtube/v3/docs/videos/list
         Args:
             **part : id, snippet, contentDetails, fileDetails, liveStreamingDetails, player, processingDetails, recordingDetails, statistics, status, suggestions, topicDetails - 필수매개변수
@@ -47,8 +49,8 @@ class YoutubeBulider:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출
         '''
 
-        __response = self.get_youtube().videos().list(part=f'{part[0]},{part[1]}').execute()
-        return __response
+        self.__response = self.get_youtube().videos().list(part=f'{part[0]},{part[1]}').execute()
+        return self.get_response()
 
     def get_key(self):
         return self.__key
@@ -58,6 +60,9 @@ class YoutubeBulider:
         self.__youtube
     def set_youtube(self, value):
         self.__youtube = value
+
+    def get_response(self):
+        self.__response
 
     
     
