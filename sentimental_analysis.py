@@ -89,7 +89,6 @@ def return_counter(nouns:list) -> list:
     return counter
 
 
-# 
 # 사용법 : remove_one_letter_noun(counter)
 def remove_one_letter_noun(counter:list) -> list:
     """
@@ -141,8 +140,24 @@ def add_stopwords(stopwords_txt:object, stopwords_list:list) -> list:
 
 
 # 정규 표현식 + 불용어 처리
-# 사용법 : 
-def text_cleaning(text, stopwords):
+def text_cleaning(text:str, stopwords:list) -> list:
+    """
+    정규표현식과 불용어를 동시에 처리하고, 명사 단위로 쪼갠 리스트를 반환한다.
+    즉, apply_regular_expression + add_stopwords + return_nouns
+
+    파라미터
+    
+    text : 텍스트 문장 한 줄을 인자로 받는다.
+
+    stopwords : 불용어 리스트를 인자로 받는다.
+
+
+    사용예
+
+    $ text_cleaning(df['text'][0])
+
+    > ['집중', '휴식', '제공', '위치', '선정', '또한', '청소', '청결', '상태']
+    """
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
     result = hangul.sub('', str(text))
     tagger = Okt()
@@ -152,28 +167,48 @@ def text_cleaning(text, stopwords):
     return nouns
 
 
-# 
-def return_vect(text_cleaning):
+# 카운트 기반 벡터화
+def vect(text_cleaning:list) -> object:
+    """
+    CountVectorizer의 인자인 tokenizer을 지정하기 위한 메소드를 입력받아, 생성된 CountVectorizer 객체를 반환한다.
+    이 객체를 훈련시켜(fit_transform) 단어들만 뽑아내거나, 해당 위치의 단어가 몇 번 등장했는지도 알 수 있다.
+
+    
+    파라미터
+
+    text_cleaning : CountVectorizer 메소드의 인자 tokenizer를 지정하기 위한 인자를 받는다.
+
+    사용예
+
+    from sklearn.feature_extraction.text import CountVectorizer
+    
+    return_vect(text_cleaning)
+    
+    > CountVectorizer()
+    """
     vect = CountVectorizer(tokenizer=lambda x: text_cleaning(x))
     return vect
 
 
-def return_bow_vect(vect, dataframe):
+def bow_vect(vect:object, dataframe:object) -> object:
+    """
+    
+    """
     bow_vect = vect.fit_transform(dataframe['text'].tolist())
     return bow_vect
 
 
-def return_word_list(vect):
+def word_list(vect):
     word_list = vect.get_feature_names()
     return word_list
 
 
-def return_count_list(bow_vect):
+def count_list(bow_vect):
     count_list = bow_vect.toarray().sum(axis=0)
     return count_list
 
 
-def return_word_count_dict(word_list, count_list):
+def word_count_dict(word_list, count_list):
     word_count_dict = dict(zip(word_list, count_list))
     return word_count_dict
 
