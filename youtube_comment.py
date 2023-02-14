@@ -24,8 +24,9 @@ class YoutubeBulider:
         self.__key = api_key
         self.__youtube = build(__PLATFORM, __VERSION, developerKey=self.get_key)
 
-    def get_comment_threads(self, *part, videoId, maxResults=20):
+    def get_comment_threads(self, *part, videoId, maxResults=20) -> list:
         '''
+        > return list
         https://developers.google.com/youtube/v3/docs/commentThreads/list
         Args:
             *part : id, replies, snippet - 필수매개변수
@@ -36,8 +37,9 @@ class YoutubeBulider:
         __response = self.get_youtube().commentThreads().list(part=f'{part[0]},{part[1]}', videoId=videoId, maxResults=maxResults).execute()
         return __response
     
-    def get_video(self, chart='mostPopular', regionCode='kr', *part):
+    def get_video(self, chart='mostPopular', regionCode='kr', *part) -> list:
         '''
+        > return list
         https://developers.google.com/youtube/v3/docs/videos/list
         Args:
             **part : id, snippet, contentDetails, fileDetails, liveStreamingDetails, player, processingDetails, recordingDetails, statistics, status, suggestions, topicDetails - 필수매개변수
