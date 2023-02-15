@@ -37,6 +37,7 @@ class YoutubeBulider:
         self.__response = self.get_youtube().commentThreads().list(part=f'{part[0]},{part[1]}', videoId=videoId, maxResults=maxResults).execute()
         return self.get_response()
     
+
     def get_videos(self, chart='mostPopular', regionCode='kr', *part) -> list:
         '''
         > return list
