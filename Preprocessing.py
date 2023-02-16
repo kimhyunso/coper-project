@@ -15,13 +15,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-
 # result 변수 반환
 def apply_regular_expression(text:str) -> str:
     """
     정규표현식을 적용한 str 객체를 반환한다.
 
     파라미터: 
+    --------
 
     text : 문장 한 줄을 인자로 받아, 정규표현식을 적용한다.
 
@@ -94,9 +94,6 @@ def return_counter(nouns:list) -> list:
 def remove_one_letter_noun(counter:list) -> list:
     """
     한 글자 명사를 제거한 list 객체를 반환한다. 
-    리스트 내포의 결과값 예시
-
-    > x : counter[x] = '타일' : 3
 
     파라미터:
 
@@ -106,6 +103,7 @@ def remove_one_letter_noun(counter:list) -> list:
     사용예제:
 
     remove_one_letter_noun(counter).most_common(10)
+    
     > 
     [('호텔', 803),
     ('위치', 328),
@@ -393,9 +391,9 @@ def returnPosWordsBarh(setPosWords, setPosCoefs):
     plt.rc('font', family='gulim')
     plt.rcParams["figure.figsize"] = (12, 9)
     plt.barh(setPosWords, setPosCoefs,
-             align='center',
-             alpha=0.5,
-             color='blue')
+            align='center',
+            alpha=0.5,
+            color='blue')
     plt.xlabel('words')
     plt.title('count')
     plt.show()
@@ -423,9 +421,9 @@ def returnNegWordsBarh(setNegWords, setNegCoefs):
     plt.rc('font', family='gulim')
     plt.rcParams["figure.figsize"] = (12, 9)
     plt.barh(setNegWords, setNegCoefs,
-             align='center',
-             alpha=0.5,
-             color='blue')
+            align='center',
+            alpha=0.5,
+            color='blue')
     plt.xlabel('words')
     plt.title('count')
     plt.show()
@@ -462,11 +460,11 @@ def returnWordcloud(word_count_dict):
     import matplotlib.pyplot as plt
     from wordcloud import WordCloud
     wordcloud = WordCloud(font_path='C:/Windows/Fonts/gulim.ttc',
-                          width=500, height=500,
-                          background_color = "white",
-                          max_font_size = 150,
-                          min_font_size = 7,
-                          margin = 3).generate_from_frequencies(word_count_dict)
+                        width=500, height=500,
+                        background_color = "white",
+                        max_font_size = 150,
+                        min_font_size = 7,
+                        margin = 3).generate_from_frequencies(word_count_dict)
     plt.figure(figsize=(15, 15))
     plt.imshow(wordcloud, interpolation="lanczos")
     plt.axis("off")
