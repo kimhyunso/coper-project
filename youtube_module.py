@@ -83,10 +83,6 @@ class YoutubeBulider:
                 for item in self.__response['items']:
                     comment = item['snippet']['topLevelComment']['snippet']
                     self.__comment_list.append([comment['textOriginal'], comment['authorDisplayName'], comment['publishedAt'], comment['updatedAt'], comment['likeCount'], video_id])
-                    if item['snippet']['totalReplyCount'] > 0:
-                        for reply_item in item['replies']['comments']:
-                            reply = reply_item['snippet']
-                            self.__comment_list.append([reply['textOriginal'], reply['authorDisplayName'], reply['publishedAt'], reply['updatedAt'], reply['likeCount'], video_id])
                 if 'nextPageToken' in self.__response:
                     self.__response = self.__youtube.commentThreads().list(part='snippet,replies', videoId=video_id, pageToken=self.__response['nextPageToken'], maxResults=maxResults).execute()
                 else:
