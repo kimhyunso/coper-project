@@ -8,11 +8,11 @@ from konlpy.tag import Okt
 from collections import Counter
 from wordcloud import WordCloud
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 
 import warnings
 
 warnings.filterwarnings("ignore")
-
 
 
 # result 변수 반환
@@ -20,11 +20,12 @@ def apply_regular_expression(text:str) -> str:
     """
     정규표현식을 적용한 str 객체를 반환한다.
 
-    파라미터
+    파라미터: 
+    --------
 
     text : 문장 한 줄을 인자로 받아, 정규표현식을 적용한다.
 
-    사용예
+    사용예: 
 
     apply_regular_expression(df['text'][숫자])
     """
@@ -41,11 +42,11 @@ def return_nouns(sentence:str) -> list:
     예를 들어, '여행에 집중할수 있게 편안한 휴식을 제공하는 호텔이었습니다' 를 입력 받으면
     ['여행', '집중', '휴식', '제공', '호텔'] 을 반환한다.
 
-    파라미터
+    파라미터: 
 
     sentence : 문장 한 줄을 인자로 받는다.
 
-    사용예
+    사용예제:
 
     return_nouns(df['text'][0])
     > ['여행', '집중', '휴식', '제공', '호텔', '위치', '선정', '또한', '청소', '청결', '상태']
@@ -66,11 +67,11 @@ def return_counter(nouns:list) -> list:
     반환값은 기본적으로 list이지만 list 내부는 ('명사', 갯수)의 튜플 형태이다.
     자세한 건 사용예 참조.
     
-    파라미터
+    파라미터: 
 
     nouns : 명사 리스트를 인자로 받는다.
 
-    사용예
+    사용예제:
 
     return_counter(nouns).most_common(10)
     > 
@@ -93,17 +94,16 @@ def return_counter(nouns:list) -> list:
 def remove_one_letter_noun(counter:list) -> list:
     """
     한 글자 명사를 제거한 list 객체를 반환한다. 
-    리스트 내포의 결과값 예시
 
-    > x : counter[x] = '타일' : 3
-
-    파라미터
+    파라미터:
 
     counter : Collections.Counter 메소드에 의해 처리된 list값을 인자로 받는다.
     즉, '단어' : 갯수 튜플로 감싸진 리스트 형태이다.
 
-    사용법
+    사용예제:
+
     remove_one_letter_noun(counter).most_common(10)
+    
     > 
     [('호텔', 803),
     ('위치', 328),
@@ -126,11 +126,13 @@ def add_stopwords(stopwords_txt:object, stopwords_list:list) -> list:
     """
     원하는 불용어가 추가된 불용어 리스트를 반환한다.
     
-    파라미터
+    파라미터:
+
     stopwords_txt = 불용어 리스트(korean_stopwords.txt)를 txt파일로 받는다.
     stopwords_list : stopwords에 불용어를 추가한다. 이 인자는 반드시 리스트로 받아야 한다.
 
-    사용예)
+    사용예제:
+
     add_stopwords(['이거', '영상', '유튜브'])
     """
     stopwords = pd.read_csv(stopwords_txt).values.tolist()
@@ -152,11 +154,9 @@ def text_cleaning(text:str, stopwords:list) -> list:
     stopwords : 불용어 리스트를 인자로 받는다.
 
 
-    사용예
+    사용예제:
 
     $ text_cleaning(df['text'][0])
-
-    > ['집중', '휴식', '제공', '위치', '선정', '또한', '청소', '청결', '상태']
     """
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
     result = hangul.sub('', str(text))
@@ -172,61 +172,137 @@ def vect(text_cleaning:list) -> object:
     """
     CountVectorizer의 인자인 tokenizer을 지정하기 위한 메소드를 입력받아, 생성된 CountVectorizer 객체를 반환한다.
     이 객체를 훈련시켜(fit_transform) 단어들만 뽑아내거나, 해당 위치의 단어가 몇 번 등장했는지도 알 수 있다.
-
     
-    파라미터
+    파라미터:
 
     text_cleaning : CountVectorizer 메소드의 인자 tokenizer를 지정하기 위한 인자를 받는다.
 
-    사용예
+    사용예제:
 
-    from sklearn.feature_extraction.text import CountVectorizer
-    
+    from sklearn.feature_extraction.text import CountVectorizer  
     return_vect(text_cleaning)
-    
-    > CountVectorizer()
     """
     vect = CountVectorizer(tokenizer=lambda x: text_cleaning(x))
     return vect
 
 
-def bow_vect(vect:object, dataframe:object) -> object:
+def bow_vect(vect:object, Series:object) -> object:
     """
-    
+    생성된 Countvectorizer 객체를 정해진 토크나이저를 적용한 객체를 반환한다.
+    아래의 예제처럼 to_array() 모듈을 사용하면 문서-단어행렬을 볼 수 있다.
+
+    파라미터:
+
+    vect : Countvectorizer로 생성된 객체를 인자로 받는다.
+    Series : Series를 인자로 받는다. 여기서 Series는 자연어가 포함된 1차원 Series를 뜻한다.
+    자세한 예제는 아래의 사용예제를 참조할 것.
+
+    사용예제:
+
+    bow_vect(vect, df['comment'])
+    bow_vect(vect, df['comment']).to_array()
     """
-    bow_vect = vect.fit_transform(dataframe['text'].tolist())
+    bow_vect = vect.fit_transform(Series.tolist())
     return bow_vect
 
 
-def word_list(vect):
+def word_list(vect:object) -> list:
+    """
+    단어 리스트를 반환한다.
+
+    파라미터: 
+
+    vect : 토크나이저가 지정된 Countvectorizer를 인자로 받는다.
+
+    사용예제:
+
+    word_list(vect)[:20]    # 20개만 추출
+    """
     word_list = vect.get_feature_names()
     return word_list
 
 
-def count_list(bow_vect):
+def count_list(bow_vect:object) -> list:
+    """
+    단어 출현 빈도를 반환한다.
+
+    파라미터: 
+
+    bow_vect : Countvectorizer를 변환시킨 객체 bow_vect를 인자로 받는다.
+
+    사용예제:
+
+    count_list(bow_vect)[:20]    # 20개만 추출
+    """
     count_list = bow_vect.toarray().sum(axis=0)
     return count_list
 
 
-def word_count_dict(word_list, count_list):
+def word_count_dict(word_list:list, count_list:list) -> dict:
+    """
+    단어 리스트 word_list와 단어의 빈도수 리스트 count_list를 묶은 딕셔너리를 반환한다.
+
+    파라미터:
+
+    word_list : 단어 리스트를 인자로 받는다.
+    count_list : 빈도수 리스트를 인자로 받는다.
+    
+    사용예제:
+
+    word_count_dict(word_list, count_list)
+    """
     word_count_dict = dict(zip(word_list, count_list))
     return word_count_dict
 
 
 # IF-IDF 생성
-def return_TFIDF_vectorizer():
-    from sklearn.feature_extraction.text import TfidfTransformer
-    tfidf_vectorizer = TfidfTransformer()
-    return tfidf_vectorizer
+def tfidf_transformer() -> object:
+    """
+    문서-단어 행렬을 IDF값으로 변환시키기 위한 TfidfTransformer객체를 생성/반환한다.
+
+    파라미터 : 없음
+
+    사용예제:
+
+    idf = return_TFIDF_Transformer()
+    idf
+    """
+    tfidf_transformer = TfidfTransformer()
+    return tfidf_transformer
 
 
-def returnTFIDF_Vect(tfidfVectorizer, bow_vect):
-    tf_idf_vect = tfidfVectorizer.fit_transform(bow_vect)
+def tfidf_vect(tfidf_transformer:object, bow_vect:object) -> object:
+    """
+    tf-idf값으로 변환된 값을 반환한다. 아래의 사용예제처럼 to_array() 모듈을 사용하면 해당 값에 대한 tf-idf배열을 생성한다.
+
+    파라미터:
+    
+    tfidf_transformer : bow_vect를 변환시키기 위한 tfidf_transformer 객체를 인자로 받는다.
+    bow_vect : Tf-IDF값으로 변환하기 위한 bow_vect를 인자로 받는다.
+
+    사용예제:
+
+    tfidf_vect(tfidf_transformer, bow_vect).to_array()
+    tfidf_vect(tfidf_transformer, bow_vect)[0]
+    """
+    tf_idf_vect = tfidf_transformer.fit_transform(bow_vect)
     return tf_idf_vect
 
 
 # 단어 맵핑
-def returnInvertedIdxVectorizer(vect):
+def invert_index_vectorizer(vect : object) -> dict:
+    """
+    단어에 접근하기 위한 인덱스:단어 쌍 딕셔너리를 반환한다.
+    
+    파라미터:
+
+    vect : 단어 객체인 vect를 인자로 받는다.
+
+    사용예제:
+
+    invert_index_vectorizer(vect)[2866]
+    """
+
     invert_index_vectorizer = {v: k for k, v in vect.vocabulary_.items()}
     return invert_index_vectorizer
 
@@ -315,9 +391,9 @@ def returnPosWordsBarh(setPosWords, setPosCoefs):
     plt.rc('font', family='gulim')
     plt.rcParams["figure.figsize"] = (12, 9)
     plt.barh(setPosWords, setPosCoefs,
-             align='center',
-             alpha=0.5,
-             color='blue')
+            align='center',
+            alpha=0.5,
+            color='blue')
     plt.xlabel('words')
     plt.title('count')
     plt.show()
@@ -345,9 +421,9 @@ def returnNegWordsBarh(setNegWords, setNegCoefs):
     plt.rc('font', family='gulim')
     plt.rcParams["figure.figsize"] = (12, 9)
     plt.barh(setNegWords, setNegCoefs,
-             align='center',
-             alpha=0.5,
-             color='blue')
+            align='center',
+            alpha=0.5,
+            color='blue')
     plt.xlabel('words')
     plt.title('count')
     plt.show()
@@ -384,11 +460,11 @@ def returnWordcloud(word_count_dict):
     import matplotlib.pyplot as plt
     from wordcloud import WordCloud
     wordcloud = WordCloud(font_path='C:/Windows/Fonts/gulim.ttc',
-                          width=500, height=500,
-                          background_color = "white",
-                          max_font_size = 150,
-                          min_font_size = 7,
-                          margin = 3).generate_from_frequencies(word_count_dict)
+                        width=500, height=500,
+                        background_color = "white",
+                        max_font_size = 150,
+                        min_font_size = 7,
+                        margin = 3).generate_from_frequencies(word_count_dict)
     plt.figure(figsize=(15, 15))
     plt.imshow(wordcloud, interpolation="lanczos")
     plt.axis("off")
