@@ -38,7 +38,7 @@ class YoutubeBulider:
         return self.get_response()
     
 
-    def get_videos(self, chart='mostPopular', regionCode='kr', *part) -> list:
+    def get_videos(self, *part, chart='mostPopular', regionCode='kr') -> list:
         '''
         > return list
         https://developers.google.com/youtube/v3/docs/videos/list
@@ -50,7 +50,8 @@ class YoutubeBulider:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출
         '''
 
-        self.__response = self.get_youtube().videos().list(part=f'{part[0]},{part[1]}').execute()
+        # self.__response = self.get_youtube().videos().list(part=f'{part[0]},{part[1]}', chart=chart, regionCode=regionCode).execute()
+        print(self.get_youtube())
         return self.get_response()
 
     def get_key(self):
