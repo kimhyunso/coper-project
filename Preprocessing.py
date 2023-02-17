@@ -143,8 +143,6 @@ def stopwords(stopwords_path:str, stopwords_list:list) -> list:
     if stopwords_list:
         for word in stopwords_list:
             stopwords.append(word)
-            
-    infile.close()
     return stopwords
 
 
