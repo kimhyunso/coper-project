@@ -26,7 +26,12 @@ class YoutubeBulider:
             response = youtube.videos().list()
             response = youtube.channels().list()
             response = youtube.search().list()
+        FOREX:
+            UCZ0bi2aVJngKLwFTU5g_fLQ
+            https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,id&id=ljP6X7gfNu8&regionCode=KR
+            https://www.googleapis.com/youtube/v3/commentThreads?part=replies,snippet&allThreadsRelatedToChannelId=UCZ0bi2aVJngKLwFTU5g_fLQ
         '''
+
 
         self.__key = api_key
         self.__youtube = build(self.__PLATFORM, self.__VERSION, developerKey=self.__key)
