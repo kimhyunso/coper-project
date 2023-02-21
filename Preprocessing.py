@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import re
+import json
 
 from konlpy.tag import Okt
 from collections import Counter
@@ -13,7 +14,6 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import warnings
 
 warnings.filterwarnings("ignore")
-
 
 # result 변수 반환
 def apply_regular_expression(text:str) -> str:
@@ -172,143 +172,14 @@ def text_cleaning(text:str, stopwords:list) -> list:
     return nouns
 
 
-# 카운트 기반 벡터화
-def vect(text_cleaning:list) -> object:
-    """
-    CountVectorizer의 인자인 tokenizer을 지정하기 위한 메소드를 입력받아, 생성된 CountVectorizer 객체를 반환한다.
-    이 객체를 훈련시켜(fit_transform) 단어들만 뽑아내거나, 해당 위치의 단어가 몇 번 등장했는지도 알 수 있다.
+def invert_text_to_vect(words:list) -> list:
+    result = []
+    word_document_path = "C:/Users/TECH2_07/Desktop/이도원 프로젝트 폴더/자료/KnuSentiLex/SentiWord_info - 복사본.json"
+    with open(word_document_path, encoding='utf-8', mode='r') as f:
+        data = json.load(f)
     
-    파라미터:
-
-    text_cleaning : CountVectorizer 메소드의 인자 tokenizer를 지정하기 위한 인자를 받는다.
-
-    사용예제:
-
-    from sklearn.feature_extraction.text import CountVectorizer  
-    return_vect(text_cleaning)
-    """
-    vect = CountVectorizer(tokenizer=lambda x: text_cleaning(x))
-    return vect
-
-
-def bow_vect(vect:object, Series:object) -> object:
-    """
-    생성된 Countvectorizer 객체를 정해진 토크나이저를 적용한 객체를 반환한다.
-    아래의 예제처럼 to_array() 모듈을 사용하면 문서-단어행렬을 볼 수 있다.
-
-    파라미터:
-
-    vect : Countvectorizer로 생성된 객체를 인자로 받는다.
-    Series : Series를 인자로 받는다. 여기서 Series는 자연어가 포함된 1차원 Series를 뜻한다.
-    자세한 예제는 아래의 사용예제를 참조할 것.
-
-    사용예제:
-
-    bow_vect(vect, df['comment'])
-    bow_vect(vect, df['comment']).to_array()
-    """
-    bow_vect = vect.fit_transform(Series.tolist())
-    return bow_vect
-
-
-def word_list(vect:object) -> list:
-    """
-    단어 리스트를 반환한다.
-
-    파라미터: 
-
-    vect : 토크나이저가 지정된 Countvectorizer를 인자로 받는다.
-
-    사용예제:
-
-    word_list(vect)[:20]    # 20개만 추출
-    """
-    word_list = vect.get_feature_names()
-    return word_list
-
-
-def count_list(bow_vect:object) -> list:
-    """
-    단어 출현 빈도를 반환한다.
-
-    파라미터: 
-
-    bow_vect : Countvectorizer를 변환시킨 객체 bow_vect를 인자로 받는다.
-
-    사용예제:
-
-    count_list(bow_vect)[:20]    # 20개만 추출
-    """
-    count_list = bow_vect.toarray().sum(axis=0)
-    return count_list
-
-
-def word_count_dict(word_list:list, count_list:list) -> dict:
-    """
-    단어 리스트 word_list와 단어의 빈도수 리스트 count_list를 묶은 딕셔너리를 반환한다.
-
-    파라미터:
-
-    word_list : 단어 리스트를 인자로 받는다.
-    count_list : 빈도수 리스트를 인자로 받는다.
-    
-    사용예제:
-
-    word_count_dict(word_list, count_list)
-    """
-    word_count_dict = dict(zip(word_list, count_list))
-    return word_count_dict
-
-
-
-# IF-IDF 생성
-def tfidf_transformer() -> object:
-    """
-    문서-단어 행렬을 IDF값으로 변환시키기 위한 TfidfTransformer객체를 생성/반환한다.
-
-    파라미터 : 없음
-
-    사용예제:
-
-    idf = return_TFIDF_Transformer()
-    idf
-    """
-    tfidf_transformer = TfidfTransformer()
-    return tfidf_transformer
-
-
-def tfidf_vect(tfidf_transformer:object, bow_vect:object) -> object:
-    """
-    tf-idf값으로 변환된 값을 반환한다. 아래의 사용예제처럼 to_array() 모듈을 사용하면 해당 값에 대한 tf-idf배열을 생성한다.
-
-    파라미터:
-    
-    tfidf_transformer : bow_vect를 변환시키기 위한 tfidf_transformer 객체를 인자로 받는다.
-    bow_vect : Tf-IDF값으로 변환하기 위한 bow_vect를 인자로 받는다.
-
-    사용예제:
-
-    tfidf_vect(tfidf_transformer, bow_vect).to_array()
-    tfidf_vect(tfidf_transformer, bow_vect)[0]
-    """
-    tf_idf_vect = tfidf_transformer.fit_transform(bow_vect)
-    return tf_idf_vect
-
-
-# 단어 맵핑
-def invert_index_vectorizer(vect : object) -> dict:
-    """
-    단어에 접근하기 위한 인덱스:단어 쌍 딕셔너리를 반환한다.
-    
-    파라미터:
-
-    vect : 단어 객체인 vect를 인자로 받는다.
-
-    사용예제:
-
-    invert_index_vectorizer(vect)[2866]
-    """
-
-    invert_index_vectorizer = {v: k for k, v in vect.vocabulary_.items()}
-    return invert_index_vectorizer
-
+    for i in range(0, len(data)):
+        for word in words:
+            if word == data[i]['word']:
+                result.append(int(data[i]['polarity']))
+    return result
