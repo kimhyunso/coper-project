@@ -30,6 +30,7 @@ class YoutubeBulider:
             UCZ0bi2aVJngKLwFTU5g_fLQ
             https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,id&id=ljP6X7gfNu8&regionCode=KR
             https://www.googleapis.com/youtube/v3/commentThreads?part=replies,snippet&allThreadsRelatedToChannelId=UCZ0bi2aVJngKLwFTU5g_fLQ
+            https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&channelId=UCQ2O-iftmnlfrBuNsUUTofQ&type=video&key=AIzaSyCAH9UmLLAcjgLqMVwJ4VgK32qlNX6F6z8
         '''
 
 
@@ -37,7 +38,25 @@ class YoutubeBulider:
         self.__youtube = build(self.__PLATFORM, self.__VERSION, developerKey=self.__key)
 
 
-    def get_videos(self, chart='mostPopular', regionCode='kr', maxResults=10) -> dict:
+    def get_videoId_in_channel(self, channelId:str, maxResults=50) -> list:
+        video_id = list()
+
+        self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', maxResults=maxResults).execute()
+        count = 0 
+
+        while self.__response:
+            for item in self.__response['items']:
+                video_id.append(item['id']['videoId'])
+
+            if count == 1:
+                break
+            if 'nextPageToken' in self.__response:
+                self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', pageToken=self.__response['nextPageToken'], maxResults=maxResults).execute()
+            count += 1
+        return video_id
+
+
+    def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=50) -> list:
         '''
         > return list
         YoutubeAPI를 통해 인기급상승 영상ID(video_id)를 크롤링해온다.
@@ -50,9 +69,17 @@ class YoutubeBulider:
         Attributes:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
         '''
+        categoryId = list()
 
-        self.__response = self.__youtube.videos().list(part='snippet,id,statistics', chart=chart, regionCode=regionCode, maxResults=maxResults).execute()
-        return self.__response
+        for videoId in videoId_list:
+            self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
+            
+            while self.__response:
+                for item in self.__response['items']:
+                    categoryId.append(item['snippet']['categoryId'])
+                break
+
+        return categoryId
 
     def get_video_list(self, n) -> list:
         '''
