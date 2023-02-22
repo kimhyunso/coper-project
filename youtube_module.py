@@ -51,7 +51,7 @@ class YoutubeBulider:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
         '''
 
-        self.__response = self.__youtube.videos().list(part='snippet,id', chart=chart, regionCode=regionCode, maxResults=maxResults).execute()
+        self.__response = self.__youtube.videos().list(part='snippet,id,statistics', chart=chart, regionCode=regionCode, maxResults=maxResults).execute()
         return self.__response
 
     def get_video_list(self, n) -> list:
