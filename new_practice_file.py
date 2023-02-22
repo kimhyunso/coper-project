@@ -4,6 +4,7 @@ import numpy as np
 import Preprocessing as prep
 import Modeling as mo
 
+
 from konlpy.tag import Okt
 
 
@@ -28,8 +29,9 @@ prep.text_cleaning(new_df.loc[1, 'text'], stopwords_list)
 
 
 
+#%%
 
-
+new_df
 
 
 
