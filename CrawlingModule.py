@@ -32,8 +32,6 @@ class YoutubeBulider:
             https://www.googleapis.com/youtube/v3/commentThreads?part=replies,snippet&allThreadsRelatedToChannelId=UCZ0bi2aVJngKLwFTU5g_fLQ
             https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&channelId=UCQ2O-iftmnlfrBuNsUUTofQ&type=video&key=AIzaSyCAH9UmLLAcjgLqMVwJ4VgK32qlNX6F6z8
         '''
-
-
         self.__key = api_key
         self.__youtube = build(self.__PLATFORM, self.__VERSION, developerKey=self.__key)
 
@@ -41,7 +39,8 @@ class YoutubeBulider:
     def get_videoId_in_channel(self, channelId:str, maxResults=50) -> list:
         video_id = list()
 
-        self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', maxResults=maxResults).execute()
+        self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', maxResults=maxResults, order='date').execute()
+        
         count = 0 
 
         while self.__response:
@@ -51,10 +50,16 @@ class YoutubeBulider:
             if count == 1:
                 break
             if 'nextPageToken' in self.__response:
-                self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', pageToken=self.__response['nextPageToken'], maxResults=maxResults).execute()
+                self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', pageToken=self.__response['nextPageToken'], maxResults=maxResults, order='date').execute()
             count += 1
         return video_id
 
+    def search_channelId(self, search_name:str, maxResults=1) -> str:
+        channelId = ''
+        self.__response = self.__youtube.search().list(part='id,snippet', q=search_name, type='channel', maxResults=maxResults).execute()
+        for item in self.__response['items']:
+            channelId = item['id']['channelId']
+        return channelId
 
     def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=50) -> list:
         '''
@@ -81,21 +86,6 @@ class YoutubeBulider:
 
         return categoryId
 
-    def get_video_list(self, n) -> list:
-        '''
-        > return list
-        YoutubeAPI를 통해 얼마 만큼의 video_id를 가져올 것인지
-        Args:
-            n : 얼마 만큼의 인기 동영상의 video_id를 가져올 것인지 
-        Attributes:
-            __video_id_list : 인기 동영상의 video_id를 list로 반환
-        '''
-        for i in range(n):
-            self.__video_id_list.append(self.__response['items'][i]['id'])
-        
-
-        return self.__video_id_list
-
 
     def get_comments(self, video_id_list, maxResults=100) -> list:
         '''
@@ -120,6 +110,8 @@ class YoutubeBulider:
                 else:
                     break
         return self.__comment_list
+
+    
 
     def create_df(self, comment_list) -> list:
         '''
