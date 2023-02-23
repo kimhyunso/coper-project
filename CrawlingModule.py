@@ -63,7 +63,7 @@ class YoutubeBulider():
             self.__channel_id = item['id']['channelId']
         return self.__channel_id
 
-    def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=50) -> list:
+    def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=1) -> list:
         '''
         > return list
         YoutubeAPI를 통해 인기급상승 영상ID(video_id)를 크롤링해온다.
@@ -76,17 +76,20 @@ class YoutubeBulider():
         Attributes:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
         '''
-
+        # 백번
         for videoId in videoId_list:
+            # 백번 쿼리 날림
             self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
-            
+
             while self.__response:
                 for item in self.__response['items']:
                     self.__category_list.append(item['snippet']['categoryId'])
-                    self.__views_count_list.append([item['statistics']['viewCount'], item['statistics']['likeCount'], item['statistics']['dislikeCount']])
+                    self.__views_count_list.append([videoId, item['statistics']['viewCount'], item['statistics']['likeCount']])
                 break
-        return self.__category_list
+        
+        return self.__category_list, self.__views_count_list
 
+        
 
     def get_comments(self, video_id_list, maxResults=100) -> list:
         '''
@@ -122,8 +125,6 @@ class YoutubeBulider():
         '''
         comments_df = pd.DataFrame(comment_list)
         return comments_df
-
-    
 
 
 
