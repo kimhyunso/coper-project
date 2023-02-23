@@ -123,7 +123,7 @@ def remove_one_letter_noun(counter:list) -> list:
 
 # 불용어 리스트 추가
 # 사용법 : add_stopwords(['이거', '저거', '호텔'])
-def stopwords(stopwords_path:str, stopwords_list:list) -> list:
+def stopwords(stopwords_path:str, stopwords_list:list=['']) -> list:
     """
     원하는 불용어가 추가된 불용어 리스트를 반환한다.
     
@@ -184,3 +184,27 @@ def invert_text_to_vect(words:list) -> list:
             if word == data[i]['word']:
                 result.append(int(data[i]['polarity']))
     return result
+
+
+# 긍정적 단어의 인덱스
+def pos_word_index(dataframe:object, sample_size:int) -> list:
+    """
+    긍정적인 단어들의 인덱스를 반환한다.
+
+    파라미터:
+
+    dataframe : 반환할 단어가 포함된 DataFrame을 인자로 받는다.
+    sample_size : 추출할 샘플의 크기를 지정하는 Integer값을 인자로 받는다.
+
+    사용예제:
+
+    pos_word_index(df, df.y.value_counts()[0])
+    """
+    positive_sample_idx = dataframe[dataframe['y'] == 2].sample(sample_size, random_state=33).index.tolist()
+    return positive_sample_idx
+
+
+# 부정적 단어의 인덱스
+def neg_word_index(dataframe:object, sample_size:int) -> list:
+    negative_sample_idx = dataframe[dataframe['y'] == 1].sample(sample_size, random_state=33).index.tolist()
+    return negative_sample_idx
