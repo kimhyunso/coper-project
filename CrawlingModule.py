@@ -79,6 +79,7 @@ class YoutubeBulider():
         # 백번
         for videoId in videoId_list:
             # 백번 쿼리 날림
+            
             self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
 
             while self.__response:
