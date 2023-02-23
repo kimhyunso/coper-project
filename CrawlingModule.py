@@ -2,11 +2,14 @@ from googleapiclient.discovery import build
 import pandas as pd
 import numpy as np
 
-class YoutubeBulider:
+class YoutubeBulider():
     __PLATFORM = 'youtube'
     __VERSION = 'v3'
     __video_id_list = list()
     __comment_list = list()
+    __category_list = list()
+    __channel_id = ''
+    __views_count_list = list()
 
     def __init__(self, api_key) -> None:
         '''
@@ -37,31 +40,30 @@ class YoutubeBulider:
 
 
     def get_videoId_in_channel(self, channelId:str, maxResults=50) -> list:
-        video_id = list()
-
         self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', maxResults=maxResults, order='date').execute()
         
         count = 0 
 
         while self.__response:
             for item in self.__response['items']:
-                video_id.append(item['id']['videoId'])
+                self.__video_id_list.append(item['id']['videoId'])
 
             if count == 1:
                 break
             if 'nextPageToken' in self.__response:
                 self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', pageToken=self.__response['nextPageToken'], maxResults=maxResults, order='date').execute()
             count += 1
-        return video_id
+
+        return self.__video_id_list
+
 
     def search_channelId(self, search_name:str, maxResults=1) -> str:
-        channelId = ''
         self.__response = self.__youtube.search().list(part='id,snippet', q=search_name, type='channel', maxResults=maxResults).execute()
         for item in self.__response['items']:
-            channelId = item['id']['channelId']
-        return channelId
+            self.__channel_id = item['id']['channelId']
+        return self.__channel_id
 
-    def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=50) -> list:
+    def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=1) -> list:
         '''
         > return list
         YoutubeAPI를 통해 인기급상승 영상ID(video_id)를 크롤링해온다.
@@ -74,18 +76,21 @@ class YoutubeBulider:
         Attributes:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
         '''
-        categoryId = list()
-
+        # 백번
         for videoId in videoId_list:
-            self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
+            # 백번 쿼리 날림
             
+            self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
+
             while self.__response:
                 for item in self.__response['items']:
-                    categoryId.append(item['snippet']['categoryId'])
+                    self.__category_list.append(item['snippet']['categoryId'])
+                    self.__views_count_list.append([videoId, item['statistics']['viewCount'], item['statistics']['likeCount']])
                 break
+        
+        return self.__category_list, self.__views_count_list
 
-        return categoryId
-
+        
 
     def get_comments(self, video_id_list, maxResults=100) -> list:
         '''
@@ -111,7 +116,6 @@ class YoutubeBulider:
                     break
         return self.__comment_list
 
-    
 
     def create_df(self, comment_list) -> list:
         '''
@@ -122,28 +126,6 @@ class YoutubeBulider:
         '''
         comments_df = pd.DataFrame(comment_list)
         return comments_df
-
-
-    def get_key(self):
-        return self.__key
-    def set_key(self, value):
-        self.__key = value
-    def get_youtube(self):
-        self.__youtube
-    def set_youtube(self, value):
-        self.__youtube = value
-    def get_response(self):
-        self.__response
-    def get_video_id_list(self):
-        self.__video_id_list
-    def set_video_id_list(self, value):
-        self.__video_id_list = value
-    def get_comment_list(self):
-        self.__comment_list
-    def set_comment_list(self, value):
-        self.__comment_list = value
-
-    
 
 
 
