@@ -230,6 +230,32 @@ def extract_hashtags(text:str) -> str:
     return result
 
 
+def remove_other_hashtag(text:str, df:object) -> str:
+    """
+    df의 description column에서 인기있게 사용되지 않은 해시태그를 제거한다.
+    
+    파라미터:
+
+    text : DataFrame의 description column을 인자로 받는다.
+    df : 해당 DataFrame을 인자로 받는다. 이때, 반드시 받을 인자는 초기의 df이다.
+
+    사용예제:
+
+    > prep.extract_one_hash(df.description, df)
+    > new_df.description.apply(lambda text: prep.extract_one_hash(text, new_df))
+    """
+    result = []
+    target_list = text.split(' ')
+    most_list = most_used_hashtag_list(df)
+
+    for hashtag in target_list:
+        if hashtag in most_list:
+            result.append(hashtag)                
+    # if len(result) == 0:
+    #     return "없음"
+    return result
+
+
 def hashtag_list(df:object) -> list:
     """
     DataFrame의 description column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
