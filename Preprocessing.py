@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import re
+import json
 
 from konlpy.tag import Okt
 from collections import Counter
@@ -122,7 +123,7 @@ def remove_one_letter_noun(counter:list) -> list:
 
 # 불용어 리스트 추가
 # 사용법 : add_stopwords(['이거', '저거', '호텔'])
-def stopwords(stopwords_path:str, stopwords_list:list) -> list:
+def stopwords(stopwords_path:str, stopwords_list:list=['']) -> list:
     """
     원하는 불용어가 추가된 불용어 리스트를 반환한다.
     
@@ -172,143 +173,120 @@ def text_cleaning(text:str, stopwords:list) -> list:
     return nouns
 
 
-# 카운트 기반 벡터화
-def vect(text_cleaning:list) -> object:
+def invert_text_to_vect(words:list) -> list:
+    result = []
+    word_document_path = "C:/Users/TECH2_07/Desktop/이도원 프로젝트 폴더/자료/KnuSentiLex/SentiWord_info - 복사본.json"
+    with open(word_document_path, encoding='utf-8', mode='r') as f:
+        data = json.load(f)
+    
+    for i in range(0, len(data)):
+        for word in words:
+            if word == data[i]['word']:
+                result.append(int(data[i]['polarity']))
+    return result
+
+
+# 긍정적 단어의 인덱스
+def pos_word_index(dataframe:object, sample_size:int) -> list:
     """
-    CountVectorizer의 인자인 tokenizer을 지정하기 위한 메소드를 입력받아, 생성된 CountVectorizer 객체를 반환한다.
-    이 객체를 훈련시켜(fit_transform) 단어들만 뽑아내거나, 해당 위치의 단어가 몇 번 등장했는지도 알 수 있다.
+    긍정적인 단어들의 인덱스를 반환한다.
+
+    파라미터:
+
+    dataframe : 반환할 단어가 포함된 DataFrame을 인자로 받는다.
+    sample_size : 추출할 샘플의 크기를 지정하는 Integer값을 인자로 받는다.
+
+    사용예제:
+
+    pos_word_index(df, df.y.value_counts()[0])
+    """
+    positive_sample_idx = dataframe[dataframe['y'] == 2].sample(sample_size, random_state=33).index.tolist()
+    return positive_sample_idx
+
+
+# 부정적 단어의 인덱스
+def neg_word_index(dataframe:object, sample_size:int) -> list:
+    negative_sample_idx = dataframe[dataframe['y'] == 1].sample(sample_size, random_state=33).index.tolist()
+    return negative_sample_idx
+
+
+# description column에서 해시태그만 남기기
+def extract_hashtags(text:str) -> str:
+    """
+    description column에서 공백을 추가해서 해시태그만 반환한다.
+    
+    정규표현식 메타 문자 설명:
+
+    #   : 첫 문자는 #으로 시작
+    \w  : 문자를 뜻함.
+    +   : 앞의 메타문자를 반복 (여기서는 \w)
+    
+    사용예제: 
+    \
+
+    > test(df.description[0])
+    > df.description.apply(test)
+    """
+    result = ' '.join(re.findall('#\w+', text))
+    return result
+
+
+def hashtag_list(df:str) -> list:
+    """
+    DataFrame의 description column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
+
+    파라미터:
+
+    series : DataFrame의 column 중에서 동영상의 해시태그가 담긴 column을 Series 객체로 받는다.
+
+    사용예제:
+
+    > hashtag_list(df.description)    
+    """
+    hashtag_list = []
+    for text in df.description:
+        hashtag_list += text.split(' ')
+    return hashtag_list
+
+
+def most_used_hashtag_list(df:object) -> list:
+    """
+    평균 이상으로 사용된 해시태그의 리스트를 반환한다.
+
+    파라미터:
+    df : description 열이 존재하는 DataFrame을 인자로 받는다. 이때, description은 해시태그만 존재하여야 한다.
+    
+    사용예제:
+    > most_used_hashtag_list(df)
+    """
+    hashtag_count = Counter(hashtag_list(df))
+    hashtag_count_1 = list(hashtag_count.values())
+    most_used_hash_list = list({key for key, value in hashtag_count.items() if value > np.mean(hashtag_count_1)})
+    return most_used_hash_list
+
+
+def most_used_hashtag_df(df:object) -> object:
+    """
+    평균 이상으로 사용된 해시태그가 포함된 row의 DataFrame을 반환한다.
     
     파라미터:
 
-    text_cleaning : CountVectorizer 메소드의 인자 tokenizer를 지정하기 위한 인자를 받는다.
+    df : description 열이 존재하는 DataFrame을 인자로 받는다. 이때, description은 해시태그만 존재하여야 한다.
 
     사용예제:
-
-    from sklearn.feature_extraction.text import CountVectorizer  
-    return_vect(text_cleaning)
+    > prep.most_used_hashtag_df(df)
+    > (prep.most_used_hashtag_df(df).description.str.contains('#방랑화가이병건') == True).sum()
     """
-    vect = CountVectorizer(tokenizer=lambda x: text_cleaning(x))
-    return vect
+    many_hashtag_df = df.copy().drop(df.index, axis=0)
 
-
-def bow_vect(vect:object, Series:object) -> object:
-    """
-    생성된 Countvectorizer 객체를 정해진 토크나이저를 적용한 객체를 반환한다.
-    아래의 예제처럼 to_array() 모듈을 사용하면 문서-단어행렬을 볼 수 있다.
-
-    파라미터:
-
-    vect : Countvectorizer로 생성된 객체를 인자로 받는다.
-    Series : Series를 인자로 받는다. 여기서 Series는 자연어가 포함된 1차원 Series를 뜻한다.
-    자세한 예제는 아래의 사용예제를 참조할 것.
-
-    사용예제:
-
-    bow_vect(vect, df['comment'])
-    bow_vect(vect, df['comment']).to_array()
-    """
-    bow_vect = vect.fit_transform(Series.tolist())
-    return bow_vect
-
-
-def word_list(vect:object) -> list:
-    """
-    단어 리스트를 반환한다.
-
-    파라미터: 
-
-    vect : 토크나이저가 지정된 Countvectorizer를 인자로 받는다.
-
-    사용예제:
-
-    word_list(vect)[:20]    # 20개만 추출
-    """
-    word_list = vect.get_feature_names()
-    return word_list
-
-
-def count_list(bow_vect:object) -> list:
-    """
-    단어 출현 빈도를 반환한다.
-
-    파라미터: 
-
-    bow_vect : Countvectorizer를 변환시킨 객체 bow_vect를 인자로 받는다.
-
-    사용예제:
-
-    count_list(bow_vect)[:20]    # 20개만 추출
-    """
-    count_list = bow_vect.toarray().sum(axis=0)
-    return count_list
-
-
-def word_count_dict(word_list:list, count_list:list) -> dict:
-    """
-    단어 리스트 word_list와 단어의 빈도수 리스트 count_list를 묶은 딕셔너리를 반환한다.
-
-    파라미터:
-
-    word_list : 단어 리스트를 인자로 받는다.
-    count_list : 빈도수 리스트를 인자로 받는다.
-    
-    사용예제:
-
-    word_count_dict(word_list, count_list)
-    """
-    word_count_dict = dict(zip(word_list, count_list))
-    return word_count_dict
+    for most_used_hashtag in most_used_hashtag_list(df):
+        df_desc_bool = df.description.str.contains(most_used_hashtag)
+        temp_df = df.loc[df_desc_bool]
+        many_hashtag_df = pd.concat([many_hashtag_df, temp_df])
+        
+    many_hashtag_df.drop_duplicates(inplace=True)
+    return many_hashtag_df
 
 
 
-# IF-IDF 생성
-def tfidf_transformer() -> object:
-    """
-    문서-단어 행렬을 IDF값으로 변환시키기 위한 TfidfTransformer객체를 생성/반환한다.
-
-    파라미터 : 없음
-
-    사용예제:
-
-    idf = return_TFIDF_Transformer()
-    idf
-    """
-    tfidf_transformer = TfidfTransformer()
-    return tfidf_transformer
-
-
-def tfidf_vect(tfidf_transformer:object, bow_vect:object) -> object:
-    """
-    tf-idf값으로 변환된 값을 반환한다. 아래의 사용예제처럼 to_array() 모듈을 사용하면 해당 값에 대한 tf-idf배열을 생성한다.
-
-    파라미터:
-    
-    tfidf_transformer : bow_vect를 변환시키기 위한 tfidf_transformer 객체를 인자로 받는다.
-    bow_vect : Tf-IDF값으로 변환하기 위한 bow_vect를 인자로 받는다.
-
-    사용예제:
-
-    tfidf_vect(tfidf_transformer, bow_vect).to_array()
-    tfidf_vect(tfidf_transformer, bow_vect)[0]
-    """
-    tf_idf_vect = tfidf_transformer.fit_transform(bow_vect)
-    return tf_idf_vect
-
-
-# 단어 맵핑
-def invert_index_vectorizer(vect : object) -> dict:
-    """
-    단어에 접근하기 위한 인덱스:단어 쌍 딕셔너리를 반환한다.
-    
-    파라미터:
-
-    vect : 단어 객체인 vect를 인자로 받는다.
-
-    사용예제:
-
-    invert_index_vectorizer(vect)[2866]
-    """
-
-    invert_index_vectorizer = {v: k for k, v in vect.vocabulary_.items()}
-    return invert_index_vectorizer
 
