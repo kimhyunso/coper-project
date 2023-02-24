@@ -86,16 +86,15 @@ class YoutubeBulider():
         Attributes:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
         '''
-    
         for videoId in videoId_list:
             self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
 
             while self.__response:
                 for item in self.__response['items']:
                     category_name = self.__cate_gory_dict[int(item['snippet']['categoryId'])]
-                    self.__videos_list.append([videoId, int(item['snippet']['categoryId']), category_name, item['snippet']['title'], int(item['statistics']['viewCount']), int(item['statistics']['likeCount']), item['snippet']['publishedAt']])
+                    self.__videos_list.append([videoId, int(item['snippet']['categoryId']), category_name, item['snippet']['title'], int(item['statistics']['viewCount']), int(item['statistics']['likeCount']), item['snippet']['publishedAt'], item['snippet']['description']])
                 break
-        
+
         return self.__videos_list
 
     def get_comments(self, video_id_list, maxResults=100) -> list:
