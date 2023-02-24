@@ -222,8 +222,7 @@ def extract_hashtags(text:str) -> str:
     +   : 앞의 메타문자를 반복 (여기서는 \w)
     
     사용예제: 
-    \
-
+    
     > test(df.description[0])
     > df.description.apply(test)
     """
@@ -231,7 +230,7 @@ def extract_hashtags(text:str) -> str:
     return result
 
 
-def hashtag_list(df:str) -> list:
+def hashtag_list(df:object) -> list:
     """
     DataFrame의 description column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
 
