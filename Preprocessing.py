@@ -278,7 +278,7 @@ def most_used_hashtag_df(df:object) -> object:
     > (prep.most_used_hashtag_df(df).description.str.contains('#방랑화가이병건') == True).sum()
     """
     many_hashtag_df = df.copy().drop(df.index, axis=0)
-
+    
     for most_used_hashtag in most_used_hashtag_list(df):
         df_desc_bool = df.description.str.contains(most_used_hashtag)
         temp_df = df.loc[df_desc_bool]
