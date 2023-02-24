@@ -211,7 +211,7 @@ def neg_word_index(dataframe:object, sample_size:int) -> list:
 
 
 # description column에서 해시태그만 남기기
-def test(text:str) -> str:
+def extract_hashtags(text:str) -> str:
     """
     description column에서 공백을 추가해서 해시태그만 반환한다.
     
@@ -222,9 +222,71 @@ def test(text:str) -> str:
     +   : 앞의 메타문자를 반복 (여기서는 \w)
     
     사용예제: 
+    \
 
     > test(df.description[0])
     > df.description.apply(test)
     """
     result = ' '.join(re.findall('#\w+', text))
     return result
+
+
+def hashtag_list(df:str) -> list:
+    """
+    DataFrame의 description column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
+
+    파라미터:
+
+    series : DataFrame의 column 중에서 동영상의 해시태그가 담긴 column을 Series 객체로 받는다.
+
+    사용예제:
+
+    > hashtag_list(df.description)    
+    """
+    hashtag_list = []
+    for text in df.description:
+        hashtag_list += text.split(' ')
+    return hashtag_list
+
+
+def most_used_hashtag_list(df:object) -> list:
+    """
+    평균 이상으로 사용된 해시태그의 리스트를 반환한다.
+
+    파라미터:
+    df : description 열이 존재하는 DataFrame을 인자로 받는다. 이때, description은 해시태그만 존재하여야 한다.
+    
+    사용예제:
+    > most_used_hashtag_list(df)
+    """
+    hashtag_count = Counter(hashtag_list(df))
+    hashtag_count_1 = list(hashtag_count.values())
+    most_used_hash_list = list({key for key, value in hashtag_count.items() if value > np.mean(hashtag_count_1)})
+    return most_used_hash_list
+
+
+def most_used_hashtag_df(df:object) -> object:
+    """
+    평균 이상으로 사용된 해시태그가 포함된 row의 DataFrame을 반환한다.
+    
+    파라미터:
+
+    df : description 열이 존재하는 DataFrame을 인자로 받는다. 이때, description은 해시태그만 존재하여야 한다.
+
+    사용예제:
+    > prep.most_used_hashtag_df(df)
+    > (prep.most_used_hashtag_df(df).description.str.contains('#방랑화가이병건') == True).sum()
+    """
+    many_hashtag_df = df.copy().drop(df.index, axis=0)
+
+    for most_used_hashtag in most_used_hashtag_list(df):
+        df_desc_bool = df.description.str.contains(most_used_hashtag)
+        temp_df = df.loc[df_desc_bool]
+        many_hashtag_df = pd.concat([many_hashtag_df, temp_df])
+        
+    many_hashtag_df.drop_duplicates(inplace=True)
+    return many_hashtag_df
+
+
+
+
