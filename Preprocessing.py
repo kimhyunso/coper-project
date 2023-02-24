@@ -208,3 +208,23 @@ def pos_word_index(dataframe:object, sample_size:int) -> list:
 def neg_word_index(dataframe:object, sample_size:int) -> list:
     negative_sample_idx = dataframe[dataframe['y'] == 1].sample(sample_size, random_state=33).index.tolist()
     return negative_sample_idx
+
+
+# description column에서 해시태그만 남기기
+def test(text:str) -> str:
+    """
+    description column에서 공백을 추가해서 해시태그만 반환한다.
+    
+    정규표현식 메타 문자 설명:
+
+    #   : 첫 문자는 #으로 시작
+    \w  : 문자를 뜻함.
+    +   : 앞의 메타문자를 반복 (여기서는 \w)
+    
+    사용예제: 
+
+    > test(df.description[0])
+    > df.description.apply(test)
+    """
+    result = ' '.join(re.findall('#\w+', text))
+    return result
