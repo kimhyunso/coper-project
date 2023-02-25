@@ -191,6 +191,8 @@ def invert_text_to_vect(words: list) -> list:
 
 
 # 긍정적 단어의 인덱스
+
+
 def pos_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
     """
     긍정적인 단어들의 인덱스를 반환한다.
@@ -213,7 +215,7 @@ def pos_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
 
 
 # 부정적 단어의 인덱스
-def neg_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
+def neg_word_index(dataframe: object, sample_size: int) -> list:
     negative_sample_idx = (
         dataframe[dataframe["y"] == 1]
         .sample(sample_size, random_state=33)
@@ -223,11 +225,16 @@ def neg_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
 
 
 # description column에서 해시태그만 남기기
-def extract_hashtags(text: str, name: str = "") -> str:
+
+def extract_hashtags(text: str) -> str:
     """
     description column에서 공백을 추가해서 해시태그만 반환한다.
 
-    파라미터:
+    정규표현식 메타 문자 설명:
+
+    #   : 첫 문자는 #으로 시작
+    \w  : 문자를 뜻함.
+    +   : 앞의 메타문자를 반복 (여기서는 \w)
 
     text : 해시태그만 추출할 문자열을 인자로 받는다.
     name : 추출할 해시태그에서 자기자신(크리에이터 본인)의 해시태그는 삭제한다.
@@ -239,6 +246,8 @@ def extract_hashtags(text: str, name: str = "") -> str:
     > test(df.description[0], "#오킹 ")
     > df.description.apply(test)
     """
+
+def hashtag_list(df: object) -> list:
     tags = " ".join(re.findall("#\w+", text))
     result = re.sub(name, "", tags)
     return result
@@ -294,7 +303,7 @@ def hashtag_list(df: pd.DataFrame) -> list:
     return hashtag_list
 
 
-def most_used_hashtag_list(df: pd.DataFrame) -> list:
+def most_used_hashtag_list(df: object) -> list:
     """
     평균 이상으로 사용된 해시태그의 리스트를 반환한다.
 
@@ -315,8 +324,7 @@ def most_used_hashtag_list(df: pd.DataFrame) -> list:
     )
     return most_used_hash_list
 
-
-def most_used_hashtag_df(df: pd.DataFrame) -> pd.DataFrame:
+def most_used_hashtag_df(df: object) -> object:
     """
     평균 이상으로 사용된 해시태그가 포함된 row의 DataFrame을 반환한다.
 

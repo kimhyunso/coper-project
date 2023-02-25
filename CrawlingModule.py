@@ -2,7 +2,8 @@ from googleapiclient.discovery import build
 import pandas as pd
 import numpy as np
 
-class YoutubeBulider():
+
+class YoutubeBulider:
     __PLATFORM = 'youtube'
     __VERSION = 'v3'
     __video_id_list = list()
@@ -10,9 +11,11 @@ class YoutubeBulider():
     __channel_id = ''
     __videos_list = list()
     __cate_gory_dict = dict()
+    __name = ''
 
     def __init__(self, api_key) -> None:
-        '''
+        """
+        생성자 - constructor
         Youtbe API를 토대로 크롤링객체를 초기화(Instarnce)를 해주는 단계이다.
         https://developers.google.com/youtube/v3/getting-started
         Args:
@@ -22,61 +25,83 @@ class YoutubeBulider():
             __youtube : 발급받은 키를 통해 실제 크롤링할 수 있는 객체를 만든다(instarnce) - private
             __PLATFORM : 어디서 크롤링을 하는가 - private
             __VERSION : youtube의 API 버전 - private
-            __video_id_list : 인기 급상승 동영상의 video_id를 반환하기 위한 list - private
+            __video_id_list : 비디오아이디를 반환하기 위한  - private
             __comment_list : 인기 급상승 동영상의 댓글들을 반환하기 위한 list - private
         Description:
             response = youtube.playlists().list()
             response = youtube.videos().list()
             response = youtube.channels().list()
             response = youtube.search().list()
-        FOREX:
-            UCZ0bi2aVJngKLwFTU5g_fLQ
-            https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,id&id=ljP6X7gfNu8&regionCode=KR
-            https://www.googleapis.com/youtube/v3/commentThreads?part=replies,snippet&allThreadsRelatedToChannelId=UCZ0bi2aVJngKLwFTU5g_fLQ
-            https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&channelId=UCQ2O-iftmnlfrBuNsUUTofQ&type=video&key=AIzaSyCAH9UmLLAcjgLqMVwJ4VgK32qlNX6F6z8
-        '''
+        """
         self.__key = api_key
         self.__youtube = build(self.__PLATFORM, self.__VERSION, developerKey=self.__key)
 
-        inline = open('./category_id_list.txt', 'r')
+        inline = open("./category_id_list.txt", "r")
         for line in inline.readlines():
-            key_value = line.split(' - ')
+            key_value = line.split(" - ")
             self.__cate_gory_dict[int(key_value[0])] = key_value[1][:-1]
 
+    def get_videoId_in_channel(self, channelId: str, maxResults=50) -> list:
+        self.__response = (
+            self.__youtube.search()
+            .list(
+                part="id,snippet",
+                channelId=channelId,
+                type="video",
+                maxResults=maxResults,
+                order="date",
+            )
+            .execute()
+        )
 
-    def get_videoId_in_channel(self, channelId:str, maxResults=50) -> list:
-        self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', maxResults=maxResults, order='date').execute()
-        
-        count = 0 
+        count = 0
         while self.__response:
-            for item in self.__response['items']:
-                self.__video_id_list.append(item['id']['videoId'])
+            for item in self.__response["items"]:
+                self.__video_id_list.append(item["id"]["videoId"])
 
             if count == 1:
                 break
-            
-            if 'nextPageToken' in self.__response:
-                self.__response = self.__youtube.search().list(part='id,snippet', channelId=channelId, type='video', pageToken=self.__response['nextPageToken'], maxResults=maxResults, order='date').execute()
+
+            if "nextPageToken" in self.__response:
+                self.__response = (
+                    self.__youtube.search()
+                    .list(
+                        part="id,snippet",
+                        channelId=channelId,
+                        type="video",
+                        pageToken=self.__response["nextPageToken"],
+                        maxResults=maxResults,
+                        order="date",
+                    )
+                    .execute()
+                )
             count += 1
 
         return self.__video_id_list
 
-
-    def search_channelId(self, search_name:str, maxResults=1) -> str:
-        '''
+    def search_channelId(self, search_name: str, maxResults=1) -> str:
+        """
         채널명을 토대로 channelId값을 알아온다.
         Args:
-            
-        
-        '''
-        self.__response = self.__youtube.search().list(part='id,snippet', q=search_name, type='channel', maxResults=maxResults).execute()
 
-        for item in self.__response['items']:
-            self.__channel_id = item['id']['channelId']
+
+        """
+        self.__response = (
+            self.__youtube.search()
+            .list(
+                part="id,snippet", q=search_name, type="channel", maxResults=maxResults
+            )
+            .execute()
+        )
+
+        for item in self.__response["items"]:
+            self.__channel_id = item["id"]["channelId"]
         return self.__channel_id
 
-    def get_categoryId_in_channel(self, videoId_list:list, regionCode='kr', maxResults=1) -> list:
-        '''
+    def get_categoryId_in_channel(
+        self, videoId_list: list, regionCode="kr", maxResults=1
+    ) -> list:
+        """
         > return list
         https://developers.google.com/youtube/v3/docs/videos/list
         Args:
@@ -85,20 +110,42 @@ class YoutubeBulider():
             maxResults : 몇 개의 결과를 반환받을 것인지
         Attributes:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
-        '''
+        """
         for videoId in videoId_list:
-            self.__response = self.__youtube.videos().list(part='snippet,id,statistics', id=videoId, regionCode=regionCode, maxResults=maxResults).execute()
+            self.__response = (
+                self.__youtube.videos()
+                .list(
+                    part="snippet,id,statistics",
+                    id=videoId,
+                    regionCode=regionCode,
+                    maxResults=maxResults,
+                )
+                .execute()
+            )
 
             while self.__response:
-                for item in self.__response['items']:
-                    category_name = self.__cate_gory_dict[int(item['snippet']['categoryId'])]
-                    self.__videos_list.append([videoId, int(item['snippet']['categoryId']), category_name, item['snippet']['title'], int(item['statistics']['viewCount']), int(item['statistics']['likeCount']), item['snippet']['publishedAt'], item['snippet']['description']])
+                for item in self.__response["items"]:
+                    category_name = self.__cate_gory_dict[
+                        int(item["snippet"]["categoryId"])
+                    ]
+                    self.__videos_list.append(
+                        [
+                            videoId,
+                            int(item["snippet"]["categoryId"]),
+                            category_name,
+                            item["snippet"]["title"],
+                            int(item["statistics"]["viewCount"]),
+                            int(item["statistics"]["likeCount"]),
+                            item["snippet"]["publishedAt"],
+                            item["snippet"]["description"],
+                        ]
+                    )
                 break
 
         return self.__videos_list
 
     def get_comments(self, video_id_list, maxResults=100) -> list:
-        '''
+        """
         > return list
         YoutubeAPI를 통해 인기급상승의 댓글들을 크롤링해온다.
         https://developers.google.com/youtube/v3/docs/commentThreads/list
@@ -107,27 +154,42 @@ class YoutubeBulider():
             maxResults : 몇 개의 결과를 반환받을 것인지
         Attributes:
             response : commentThreads에서 목록의 쿼리를 날려서 결과를 도출 - private
-        '''
+        """
 
         for video_id in video_id_list:
-            self.__response = self.__youtube.commentThreads().list(part='id,snippet,replies', videoId=video_id, maxResults=maxResults).execute()
+            self.__response = (
+                self.__youtube.commentThreads()
+                .list(
+                    part="id,snippet,replies", videoId=video_id, maxResults=maxResults
+                )
+                .execute()
+            )
 
             while self.__response:
-                for item in self.__response['items']:
-                    comment = item['snippet']['topLevelComment']['snippet']
-                    self.__comment_list.append([comment['videoId'], item['snippet']['topLevelComment']['id'], comment['textOriginal'], comment['likeCount'], comment['publishedAt'], comment['updatedAt']])
-                if 'nextPageToken' in self.__response:
-                    self.__response = self.__youtube.commentThreads().list(part='id,snippet,replies', videoId=video_id, pageToken=self.__response['nextPageToken'], maxResults=maxResults).execute()
+                for item in self.__response["items"]:
+                    comment = item["snippet"]["topLevelComment"]["snippet"]
+                    self.__comment_list.append(
+                        [
+                            comment["videoId"],
+                            item["snippet"]["topLevelComment"]["id"],
+                            comment["textOriginal"],
+                            comment["likeCount"],
+                            comment["publishedAt"],
+                            comment["updatedAt"],
+                        ]
+                    )
+                if "nextPageToken" in self.__response:
+                    self.__response = (
+                        self.__youtube.commentThreads()
+                        .list(
+                            part="id,snippet,replies",
+                            videoId=video_id,
+                            pageToken=self.__response["nextPageToken"],
+                            maxResults=maxResults,
+                        )
+                        .execute()
+                    )
                 else:
                     break
-
-        # 비디오 100개당 대략 1000~3000 ??
-        return self.__comment_list
-
-
-
-
         
- 
-            
-
+        return self.__comment_list
