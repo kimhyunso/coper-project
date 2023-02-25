@@ -259,6 +259,7 @@ def remove_other_hashtag(text: str, df: pd.DataFrame, human_list_path: str = "")
     > prep.extract_one_hash(df.description, df)
     > new_df.description.apply(lambda text: prep.extract_one_hash(text, new_df))
     """
+    
     result = []
     target_list = text.split(" ")
     most_list = most_used_hashtag_list(df)

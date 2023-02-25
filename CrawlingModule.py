@@ -22,16 +22,13 @@ class YoutubeBulider:
         __comment_list : 댓글 내용을 반환하기 위한 리스트 - private
         __channel_id : 채널 아이디를 반환하기 위한 문자열 - private
         __videos_list : 비디오들을 반환하기 위한 리스트 - private
-        __cate_gory_dict : 
+        __cate_gory_dict : 카테고리별 수치화된 딕셔너리 - private
     ForExample:
-            response = youtube.playlists().list()
-            response = youtube.videos().list()
-            response = youtube.channels().list()
-            response = youtube.search().list()
+        response = youtube.playlists().list()
+        response = youtube.videos().list()
+        response = youtube.channels().list()
+        response = youtube.search().list()
     '''
-    def __doc__(self):
-        pass
-
     def __init__(self, api_key) -> None:
         """
         생성자 - constructor
@@ -39,21 +36,40 @@ class YoutubeBulider:
         https://developers.google.com/youtube/v3/getting-started
         Args:
             api_key : 발급받은 키
-        Description:
-            response = youtube.playlists().list()
-            response = youtube.videos().list()
-            response = youtube.channels().list()
-            response = youtube.search().list()
         """
         self.__key = api_key
         self.__youtube = build(self.__PLATFORM, self.__VERSION, developerKey=self.__key)
 
-        inline = open("./category_id_list.txt", "r")
+        # 카테고리 파일을 읽어드린다.
+        inline = open("./category_id_list.txt", "r" , encoding='utf-8')
+        # 파일을 읽으며 ' - ' 단위로 쪼갠다.
         for line in inline.readlines():
             key_value = line.split(" - ")
+            # dict
             self.__cate_gory_dict[int(key_value[0])] = key_value[1][:-1]
 
-    def get_videoId_in_channel(self, channelId: str, maxResults=50) -> list:
+
+    
+
+    def search_get_channelId(self, search_name: str, maxResults=1) -> str:
+        """
+        채널명을 토대로 channelId값을 알아온다.
+        Args:
+        """
+        self.__response = (
+            self.__youtube.search()
+            .list(
+                part="id,snippet", q=search_name, type="channel", maxResults=maxResults
+            )
+            .execute()
+        )
+
+        for item in self.__response["items"]:
+            self.__channel_id = item["id"]["channelId"]
+        return self.__channel_id
+
+
+    def search_get_videoId_in_channel(self, channelId: str, maxResults=50) -> list:
         self.__response = (
             self.__youtube.search()
             .list(
@@ -65,13 +81,12 @@ class YoutubeBulider:
             )
             .execute()
         )
+        count = 1
 
-        count = 0
         while self.__response:
             for item in self.__response["items"]:
                 self.__video_id_list.append(item["id"]["videoId"])
-
-            if count == 1:
+            if count == 100:
                 break
 
             if "nextPageToken" in self.__response:
@@ -87,31 +102,11 @@ class YoutubeBulider:
                     )
                     .execute()
                 )
-            count += 1
-
+                count += 1
         return self.__video_id_list
 
-    def search_channelId(self, search_name: str, maxResults=1) -> str:
-        """
-        채널명을 토대로 channelId값을 알아온다.
-        Args:
-
-
-        """
-        self.__response = (
-            self.__youtube.search()
-            .list(
-                part="id,snippet", q=search_name, type="channel", maxResults=maxResults
-            )
-            .execute()
-        )
-
-        for item in self.__response["items"]:
-            self.__channel_id = item["id"]["channelId"]
-        return self.__channel_id
-
-    def get_categoryId_in_channel(
-        self, videoId_list: list, regionCode="kr", maxResults=1
+    def get_videos_in_videoId_list(
+        self, videoId_list: list, regionCode="kr", maxResults=50
     ) -> list:
         """
         > return list
@@ -123,6 +118,7 @@ class YoutubeBulider:
         Attributes:
             response : Videos에서 목록의 쿼리를 날려서 결과를 도출 - private
         """
+        count = 0
         for videoId in videoId_list:
             self.__response = (
                 self.__youtube.videos()
@@ -152,8 +148,22 @@ class YoutubeBulider:
                             item["snippet"]["description"],
                         ]
                     )
-                break
+                    if count == 100:
+                        break
 
+                    if "nextPageToken" in self.__response:
+                        self.__response = (
+                            self.__youtube.videos()
+                            .list(
+                                part="snippet,id,statistics",
+                                id=videoId,
+                                regionCode=regionCode,
+                                maxResults=maxResults,
+                            )
+                            .execute()
+                        )
+                    count += 1
+                break
         return self.__videos_list
 
     def get_comments(self, video_id_list, maxResults=100) -> list:
