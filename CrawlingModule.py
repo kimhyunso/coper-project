@@ -13,6 +13,25 @@ class YoutubeBulider:
     __cate_gory_dict = dict()
     __name = ''
 
+    '''
+    Attributes:
+        __youtube : 발급받은 키를 통해 실제 크롤링할 수 있는 객체를 만든다(instarnce) - private
+        __PLATFORM : 어디서 크롤링을 하는가 - private
+        __VERSION : youtube의 API 버전 - private
+        __video_id_list : 비디오아이디를 반환하기 위한 리스트 - private
+        __comment_list : 댓글 내용을 반환하기 위한 리스트 - private
+        __channel_id : 채널 아이디를 반환하기 위한 문자열 - private
+        __videos_list : 비디오들을 반환하기 위한 리스트 - private
+        __cate_gory_dict : 
+    ForExample:
+            response = youtube.playlists().list()
+            response = youtube.videos().list()
+            response = youtube.channels().list()
+            response = youtube.search().list()
+    '''
+    def __doc__(self):
+        pass
+
     def __init__(self, api_key) -> None:
         """
         생성자 - constructor
@@ -20,13 +39,6 @@ class YoutubeBulider:
         https://developers.google.com/youtube/v3/getting-started
         Args:
             api_key : 발급받은 키
-        Attributes:
-            __key : 발급받은 키 - private
-            __youtube : 발급받은 키를 통해 실제 크롤링할 수 있는 객체를 만든다(instarnce) - private
-            __PLATFORM : 어디서 크롤링을 하는가 - private
-            __VERSION : youtube의 API 버전 - private
-            __video_id_list : 비디오아이디를 반환하기 위한  - private
-            __comment_list : 인기 급상승 동영상의 댓글들을 반환하기 위한 list - private
         Description:
             response = youtube.playlists().list()
             response = youtube.videos().list()
