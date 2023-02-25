@@ -244,9 +244,7 @@ def extract_hashtags(text: str, name: str = "") -> str:
     return result
 
 
-def remove_other_hashtag(
-    text: str, df: pd.DataFrame, human_list_path: str = ""
-) -> str:
+def remove_other_hashtag(text: str, df: pd.DataFrame, human_list_path: str = "") -> str:
     """
     df의 description column에서 인기있게 사용되지 않은 해시태그를 제거한다.
 
@@ -264,15 +262,21 @@ def remove_other_hashtag(
     result = []
     target_list = text.split(" ")
     most_list = most_used_hashtag_list(df)
-    human_array = pd.read_csv(
-        human_list_path, encoding="utf-8", engine="python", sep="\t"
-    ).values
+
+    if human_list_path:
+        human_array = pd.read_csv(
+            human_list_path, encoding="utf-8", engine="python", sep="\t"
+        ).values
 
     for hashtag in target_list:
-        if hashtag in most_list and hashtag in human_array:
-            result.append(hashtag)
-        if len(result) == 0:
-            result.append("None")
+        if human_list_path:  # human_list_path에 하나라도 있으면
+            if hashtag in most_list and hashtag in human_array:
+                result.append(hashtag)
+        else:  # human_list_path에 하나도 없으면
+            if hashtag in most_list:
+                result.append(hashtag)
+    if len(result) == 0:
+        result.append("None")
     return " ".join(result)
 
 
