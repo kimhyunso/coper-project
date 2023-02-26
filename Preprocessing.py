@@ -7,7 +7,6 @@ import json
 
 from konlpy.tag import Okt
 from collections import Counter
-from wordcloud import WordCloud
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
@@ -164,7 +163,7 @@ def text_cleaning(text: str, stopwords: list) -> list:
 
     사용예제:
 
-    $ text_cleaning(df['text'][0])
+    > text_cleaning(df['text'][0])
     """
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
     result = hangul.sub("", str(text))
@@ -437,7 +436,7 @@ def automatize_human_hash_df(df:pd.DataFrame, s_tag_name:str="", w_tag_name:str=
         raise Exception("해시태그나 카테고리 ID 값을 확인해주세요.")
     
     views_count, like_count, df_index = view_like_count_and_df_index(df, tag_name=s_tag_name)
-    add_list = [f'{w_tag_name}_video', 24, 'Entertainment', f'{w_tag_name}_title', views_count, like_count, f'{w_tag_name}_uploaded_at', w_tag_name]
+    add_list = [f'{w_tag_name}_video', category_id, 'Entertainment', f'{w_tag_name}_title', views_count, like_count, f'{w_tag_name}_uploaded_at', w_tag_name]
     new_df = add_drop_row(df, df_index, add_list)
     return new_df
 

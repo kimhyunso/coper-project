@@ -1,3 +1,21 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import re
+import json
+
+from konlpy.tag import Okt
+from collections import Counter
+from wordcloud import WordCloud
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+
+import warnings
+
+warnings.filterwarnings("ignore")
+
+
 # barplot 시각화
 # 긍정 / 부정 키워드 분석
 def keywordCoef(lr):
@@ -109,4 +127,63 @@ def returnWordcloud(word_count_dict):
     plt.figure(figsize=(15, 15))
     plt.imshow(wordcloud, interpolation="lanczos")
     plt.axis("off")
+    plt.show()
+
+
+def appear_video_month_comment_count(df:pd.DataFrame, video_id:str) -> None:
+    """
+    주어진 DataFrame에서 video_id가 주어진 video_id와 일치하는 댓글 데이터를 가져와서
+    시간순으로 정렬하고, 월별 댓글 등록 수와 월별 누적 댓글수를 그래프로 나타내는 함수입니다.
+    
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        댓글 데이터를 담고 있는 DataFrame
+    video_id : str
+        댓글을 확인하고자 하는 동영상의 ID
+        
+    Returns
+    -------
+    None
+        월간 댓글 등록 수와 누적 댓글수를 시각화한 그래프를 출력합니다.
+    """
+       # video_id와 일치하는 동영상 댓글 데이터만 추출합니다.
+    video_df = df.loc[df.video_id == video_id]
+    # 댓글 등록 시간을 기준으로 오름차순 정렬합니다.
+    video_df = video_df.sort_values(by="created_at", ascending=True).reset_index(drop=True)
+    # 댓글 등록 시간을 기준으로 다시 오름차순 정렬합니다.
+    # (위에서 이미 오름차순 정렬한 것과 동일하므로 의미 없는 코드입니다.)
+    video_df_1 = video_df.copy()
+    video_df_1.sort_values(by='created_at', ascending=True).reset_index(drop=True)
+
+    # 월별 댓글 등록 수를 구합니다.
+    video_df_month = video_df_1.created_at.dt.month.unique().tolist()
+    video_df_month = list(map(str, video_df_month))
+    video_df_data = video_df_1.created_at.dt.month.value_counts().values.tolist()
+
+    # 그래프 사이즈를 조절합니다.
+    plt.rcParams["figure.figsize"] = (12, 9)
+
+    # 첫 번째 subplot에 월별 댓글 등록 수를 나타내는 선 그래프를 그립니다.
+    plt.subplot(1, 2, 1)
+    plt.title(f"{video_df_1.video_id[0]}의 월간 댓글 등록 수")
+    plt.xlabel("월(Month)")
+    plt.ylabel("댓글 등록 수")
+    sns.lineplot(x=video_df_month, y=video_df_data, label="댓글 등록 수")
+
+    # 두 번째 subplot에 월별 누적 댓글수를 나타내는 선 그래프를 그립니다.
+    # 누적 댓글수는 이전 월의 누적 댓글수에 현재 월의 댓글 등록 수를 더한 값으로 계산합니다.
+    new_video_df_data = video_df_data.copy()
+
+    for idx, data in enumerate(video_df_data):
+        if idx == 0:
+            continue
+        new_video_df_data[idx] = new_video_df_data[idx] + new_video_df_data[idx-1]
+
+    plt.subplot(1, 2, 2)
+    plt.title(f"{video_df_1.video_id[0]}의 월간 누적 댓글수")
+    plt.xlabel("월(Month)")
+    plt.ylabel("댓글 등록 수")
+    sns.lineplot(x=video_df_month, y=new_video_df_data, label="누적 댓글수", color="red")
+
     plt.show()
