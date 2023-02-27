@@ -8,7 +8,6 @@ class YoutubeBulider:
     __VERSION = 'v3'
     __video_id_list = list()
     __comment_list = list()
-    __channel_id = ''
     __videos_list = list()
     __cate_gory_dict = dict()
     __name = ''
@@ -50,6 +49,7 @@ class YoutubeBulider:
             # 카테고리 사전에서 숫자를 키로 문자를 value로 지정함
             self.__cate_gory_dict[int(key_value[0])] = key_value[1][:-1]
 
+
     def search_get_channelId(self, search_name: str, maxResults=1) -> str:
         """
         채널명을 토대로 channelId값을 알아온다.
@@ -66,11 +66,13 @@ class YoutubeBulider:
             .execute()
         )
         # resopnse item 안에 id 안에 channelId가 있음
-        for item in self.__response["items"]:
-            self.__channel_id = item["id"]["channelId"]
-        return self.__channel_id
+        return self.__response["items"]['id']['channelId']
+    
+    def channel_get_view_count(self, channelId:str, maxResults=1) -> int:
+        self.__response = self.__youtube.channels().list(part='id,snippet,statistics', id=channelId, maxResults=1).execute()
+        return self.__response['items']['statistics']['viewCount']
 
-    def search_get_videoId_in_channel(self, channelId: str, maxResults=50) -> list:
+    def search_get_videoId_in_channel(self, channelId:str, maxResults=50) -> list:
         '''
         channel_id를 토대로 video_id들을 알아온다.
         Args:
@@ -166,7 +168,7 @@ class YoutubeBulider:
                         ]
                     )
                     # count를 돌면서 100이 되면 while문을 빠져나옴 maxResults에 따라 달라짐 ex) maxResults 50개 -> 50 * 100 => 5000개의 데이터를 가져옴
-                    if count == 100:
+                    if count == 20:
                         break
 
                     # 다음 데이터가 있을 경우 다시 요청함
