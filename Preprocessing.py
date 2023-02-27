@@ -347,7 +347,8 @@ def most_used_hashtag_df(df: pd.DataFrame) -> pd.DataFrame:
 def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name:str=""
 )-> tuple:
     """
-    views_count, like_count, df_index를 각각 반환합니다.
+    해시태그 단위로, 조회수와 좋아요 수에 대한 각각의 대표값이 담긴 views_count, like_count와
+    해당 해시태그가 일치하는 DataFrame의 인덱스 df_index를 각각 반환합니다.
 
     인수:
     - df: 해시태그, 보기 및 좋아요를 포함한 비디오 정보가 포함된 pandas.DataFrame.
@@ -442,3 +443,28 @@ def automatize_human_hash_df(df:pd.DataFrame, s_tag_name:str="", w_tag_name:str=
     return new_df
 
 
+def get_video_statistics(df_videos: pd.DataFrame, df_comments: pd.DataFrame) -> tuple:
+    """
+    비디오 데이터프레임(df_videos)과 댓글 데이터프레임(df_comments)을 이용하여 각 비디오의 댓글 수, 조회수, 좋아요 수에 대한 딕셔너리를 생성합니다.
+
+    Args:
+    - df_videos (pandas.DataFrame) : 비디오 데이터프레임입니다. (video_id, title, channel_id, channel_title, category_id, publish_date, tags, views_count, likes, dislikes, description)
+    - df_comments
+      (pandas.DataFrame) : 댓글 데이터프레임입니다. (comment_id, author, video_id, content, publish_date)
+
+    Returns:
+    - tuple : 조회수, 좋아요 수, 댓글 수에 대한 딕셔너리를 반환합니다.
+    """
+
+    # 각 비디오의 댓글 수, 조회수, 좋아요 수를 계산합니다.
+    comment_count = df_comments.video_id.value_counts().values
+    video_list = df_videos.video_id.unique()
+    views_comment = df_videos.views_count.unique()
+    views_like = df_videos.like_count.unique()
+
+    # 각 비디오의 id를 key로 하고 댓글 수, 조회수, 좋아요 수를 value로 하는 딕셔너리를 생성합니다.
+    dict_video_comment = dict(zip(video_list, comment_count))    # {비디오_id : 댓글 수}
+    dict_video_views = dict(zip(video_list, views_comment))      # {비디오_id : 조회수}
+    dict_video_like = dict(zip(video_list, views_like))          # {비디오_id : 좋아요 수}
+
+    return dict_video_views, dict_video_like, dict_video_comment

@@ -152,9 +152,7 @@ def appear_video_month_comment_count(df:pd.DataFrame, video_id:str) -> None:
     # 댓글 등록 시간을 기준으로 오름차순 정렬합니다.
     video_df = video_df.sort_values(by="created_at", ascending=True).reset_index(drop=True)
     # 댓글 등록 시간을 기준으로 다시 오름차순 정렬합니다.
-    # (위에서 이미 오름차순 정렬한 것과 동일하므로 의미 없는 코드입니다.)
     video_df_1 = video_df.copy()
-    video_df_1.sort_values(by='created_at', ascending=True).reset_index(drop=True)
 
     # 월별 댓글 등록 수를 구합니다.
     video_df_month = video_df_1.created_at.dt.month.unique().tolist()
@@ -186,4 +184,26 @@ def appear_video_month_comment_count(df:pd.DataFrame, video_id:str) -> None:
     plt.ylabel("댓글 등록 수")
     sns.lineplot(x=video_df_month, y=new_video_df_data, label="누적 댓글수", color="red")
 
+    plt.show()
+
+
+def show_boxplot(df:pd.DataFrame, col_x_y:tuple, graph_size:tuple=(30, 20)):
+    """
+    입력된 데이터프레임과 컬럼 리스트를 바탕으로 boxplot을 그리는 함수.
+    - df: boxplot을 그리기 위한 데이터프레임
+    - col_x_y:tuple: boxplot의 인자인 x, y값을 지정하기 위한 tuple. 튜플 내부에는 column을 지정하는 str 데이터가 존재해야 한다.
+    - graph_size: 그래프의 크기(가로, 세로)를 설정하는 튜플. 기본값(Default)은 (30, 20)
+    """
+    # 그래프의 사이즈를 설정합니다.
+    plt.rcParams['figure.figsize'] = graph_size
+    # 폰트 설정을 합니다.
+    plt.rc('font', family='Malgun Gothic')
+
+    # seaborn 라이브러리의 boxplot을 사용하여 그래프를 그립니다.
+    sns.boxplot(data=df, x=df[f"{col_x_y[0]}"], y=df[f"{col_x_y[1]}"])
+    # 그래프 요소들이 서로 겹치지 않도록 간격을 조절합니다.
+    plt.tight_layout()
+    # x축 라벨의 폰트 크기를 설정합니다.
+    plt.xticks(fontsize = 8.5)
+    # 그래프를 화면에 출력합니다.
     plt.show()
