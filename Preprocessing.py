@@ -376,6 +376,7 @@ def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name
     elif represent == "median":
         views_count = np.median(df.loc[df_index, "views_count"])
         like_count = np.median(df.loc[df_index, "like_count"])
+        
     return views_count, like_count, df_index
 
 
