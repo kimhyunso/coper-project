@@ -3,15 +3,13 @@ import pandas as pd
 import numpy as np
 
 
-class YoutubeBulider:
+class YoutubeBuilder:
     __PLATFORM = 'youtube'
     __VERSION = 'v3'
     __video_id_list = list()
     __comment_list = list()
-    __channel_id = ''
     __videos_list = list()
     __cate_gory_dict = dict()
-    __name = ''
 
     '''
     Attributes:
@@ -43,14 +41,15 @@ class YoutubeBulider:
         self.__youtube = build(self.__PLATFORM, self.__VERSION, developerKey=self.__key)
 
         # 카테고리 파일을 읽어드린다.
-        inline = open("./category_id_list.txt", "r" , encoding='utf-8')
+        inline = open("./데이터/category_id_list.txt", "r" , encoding='utf-8')
         # 파일을 읽으며 ' - ' 단위로 쪼갠다.
         for line in inline.readlines():
             key_value = line.split(" - ")
             # 카테고리 사전에서 숫자를 키로 문자를 value로 지정함
             self.__cate_gory_dict[int(key_value[0])] = key_value[1][:-1]
 
-    def search_get_channelId(self, search_name: str, maxResults=1) -> str:
+
+    def search_get_channelId(self, search_name: str, maxResults=1):
         """
         채널명을 토대로 channelId값을 알아온다.
         Args:
@@ -66,11 +65,13 @@ class YoutubeBulider:
             .execute()
         )
         # resopnse item 안에 id 안에 channelId가 있음
-        for item in self.__response["items"]:
-            self.__channel_id = item["id"]["channelId"]
-        return self.__channel_id
+        return self.__response["items"][0]['id']['channelId']
+    
+    def channel_get_view_count(self, channelId:str, maxResults=1) -> int:
+        self.__response = self.__youtube.channels().list(part='id,snippet,statistics', id=channelId, maxResults=1).execute()
+        return self.__response['items']['statistics']['viewCount']
 
-    def search_get_videoId_in_channel(self, channelId: str, maxResults=50) -> list:
+    def search_get_videoId_in_channel(self, channelId:str, maxResults=50) -> list:
         '''
         channel_id를 토대로 video_id들을 알아온다.
         Args:
@@ -89,6 +90,7 @@ class YoutubeBulider:
             )
             .execute()
         )
+
         # 최대 몇개 까지 제한을 할 것인가
         count = 0
 
@@ -99,7 +101,7 @@ class YoutubeBulider:
             for item in self.__response["items"]:
                 self.__video_id_list.append(item["id"]["videoId"])
             # count를 돌면서 100이 되면 while문을 빠져나옴 maxResults에 따라 달라짐 ex) maxResults 50개 -> 50 * 100 => 5000개의 데이터를 가져옴
-            if count == 100:
+            if count == 20:
                 break
 
             # 다음 데이터가 있을 경우 다시 요청을 함
@@ -166,7 +168,7 @@ class YoutubeBulider:
                         ]
                     )
                     # count를 돌면서 100이 되면 while문을 빠져나옴 maxResults에 따라 달라짐 ex) maxResults 50개 -> 50 * 100 => 5000개의 데이터를 가져옴
-                    if count == 100:
+                    if count == 20:
                         break
 
                     # 다음 데이터가 있을 경우 다시 요청함
@@ -197,15 +199,15 @@ class YoutubeBulider:
         """
 
         # 비디오 개수 만큼 돌며 youtube에게 요청을 한다.
-        for video_id in video_id_list:
+
+        for index in range(len(video_id_list) // 2):
             self.__response = (
                 self.__youtube.commentThreads()
                 .list(
-                    part="id,snippet,replies", videoId=video_id, maxResults=maxResults
+                    part="id,snippet,replies", videoId=video_id_list[index], maxResults=maxResults
                 )
                 .execute()
             )
-
             # response의 개수 만큼 돌며 댓글들을 가져온다.
             while self.__response:
                 for item in self.__response["items"]:
@@ -215,7 +217,7 @@ class YoutubeBulider:
                             comment["videoId"],
                             item["snippet"]["topLevelComment"]["id"],
                             comment["textOriginal"],
-                            comment["likeCount"],
+                            int(comment["likeCount"]),
                             comment["publishedAt"],
                             comment["updatedAt"],
                         ]
@@ -227,7 +229,7 @@ class YoutubeBulider:
                         self.__youtube.commentThreads()
                         .list(
                             part="id,snippet,replies",
-                            videoId=video_id,
+                            videoId=video_id_list[index],
                             pageToken=self.__response["nextPageToken"],
                             maxResults=maxResults,
                         )
