@@ -130,6 +130,35 @@ def returnWordcloud(word_count_dict):
     plt.show()
 
 
+def get_category_barplot(df: pd.DataFrame, g_size: tuple = (16, 10), font: str = "Malgun Gothic", theme: str = "Pastel1") -> None:
+    """
+    데이터프레임의 카테고리 별 개수를 막대 그래프로 시각화하는 함수
+
+    Args:
+        df (pd.DataFrame): 분석할 데이터프레임
+        g_size (tuple, optional): 그래프의 크기 (가로, 세로). Defaults to (16, 10).
+        font (str, optional): 그래프의 폰트. Defaults to "Malgun Gothic".
+        theme (str, optional): 그래프의 테마. Defaults to "Pastel1".
+
+    Returns:
+        None
+    """
+    # 카테고리 별 갯수
+    x = df.category_name.unique()
+    y = df.category_name.value_counts().values
+    sns.set_theme(palette=f"{theme}")
+
+    plt.figure(figsize=g_size)
+    plt.rc('font', family=f"{font}")
+
+    sns.barplot(x=x, y=y, alpha=1)
+    plt.xlabel('카테고리')
+    plt.ylabel('카테고리 수')
+    plt.title('카테고리 별 갯수')
+
+    plt.show()
+
+
 def appear_video_month_comment_count(df:pd.DataFrame,
                                      video_id:str,
                                      t_stand:str="month",
