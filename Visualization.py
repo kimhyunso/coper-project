@@ -145,7 +145,11 @@ def get_category_barplot(df: pd.DataFrame, g_size: tuple = (16, 10), font: str =
     """
     # 카테고리 별 갯수
     x = df.category_name.unique()
-    y = df.category_name.value_counts().values
+    y = []
+
+    for name in x:
+        y.append(df.loc[df.category_name == name].category_name.shape[0])
+
     sns.set_theme(palette=f"{theme}")
 
     plt.figure(figsize=g_size)
