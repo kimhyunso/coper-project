@@ -164,21 +164,21 @@ def appear_video_month_comment_count(df:pd.DataFrame,
 
     # 월별 댓글 등록 수를 구합니다.
     if t_stand == "month":
-        video_df_month = video_df_1.created_at.dt.month.unique().tolist()
+        video_df_month = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.month.unique().tolist()
         video_df_month = list(map(str, video_df_month))
-        video_df_data = video_df_1.created_at.dt.month.value_counts().values.tolist()
+        video_df_data = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.month.value_counts().values.tolist()
     elif t_stand == "day":
-        video_df_month = video_df_1.created_at.dt.day.unique().tolist()
+        video_df_month = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.day.unique().tolist()
         video_df_month = list(map(str, video_df_month))
-        video_df_data = video_df_1.created_at.dt.day.value_counts().values.tolist()
+        video_df_data = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.day.value_counts().values.tolist()
     elif t_stand == "hour":
-        video_df_month = video_df_1.created_at.dt.hour.unique().tolist()
+        video_df_month = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.hour.unique().tolist()
         video_df_month = list(map(int, video_df_month))
-        video_df_data = video_df_1.created_at.dt.hour.value_counts().values.tolist()
+        video_df_data = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.hour.value_counts().values.tolist()
     elif t_stand == "minute":
-        video_df_month = video_df_1.created_at.dt.minute.unique().tolist()
+        video_df_month = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.minute.unique().tolist()
         video_df_month = list(map(int, video_df_month))
-        video_df_data = video_df_1.created_at.dt.minute.value_counts().values.tolist()
+        video_df_data = video_df_1.loc[video_df_1.video_id == f"{video_id}"].created_at.dt.minute.value_counts().values.tolist()
 
     # 그래프 사이즈를 조절합니다.
     plt.rcParams["figure.figsize"] = g_size
