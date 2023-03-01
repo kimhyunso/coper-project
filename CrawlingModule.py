@@ -188,7 +188,7 @@ class YoutubeBuilder:
                 break
         return self.__videos_list
 
-    def get_comments(self, video_id_list, maxResults=100) -> list:
+    def get_comments(self, video_id_list, maxResults=50) -> list:
 
         """
         YoutubeAPI를 통해 동영상의 댓글들을 가져온다.
@@ -197,45 +197,46 @@ class YoutubeBuilder:
             video_id_list : 동영상의 ID 목록 ex) https://www.youtube.com/watch?v=BP1rFQtacU4 :: BP1rFQtacU4
             maxResults : 한 번에 몇개의 결과를 받을 것인가
         """
-
-        # 비디오 개수 만큼 돌며 youtube에게 요청을 한다.
-
-        for index in range(len(video_id_list) // 2):
-            self.__response = (
-                self.__youtube.commentThreads()
-                .list(
-                    part="id,snippet,replies", videoId=video_id_list[index], maxResults=maxResults
-                )
-                .execute()
-            )
-            # response의 개수 만큼 돌며 댓글들을 가져온다.
-            while self.__response:
-                for item in self.__response["items"]:
-                    comment = item["snippet"]["topLevelComment"]["snippet"]
-                    self.__comment_list.append(
-                        [
-                            comment["videoId"],
-                            item["snippet"]["topLevelComment"]["id"],
-                            comment["textOriginal"],
-                            int(comment["likeCount"]),
-                            comment["publishedAt"],
-                            comment["updatedAt"],
-                        ]
-                    )
-
-                # 다음 댓글이 있다면 다시 재요청을 보낸다.
-                if "nextPageToken" in self.__response:
-                    self.__response = (
-                        self.__youtube.commentThreads()
-                        .list(
-                            part="id,snippet,replies",
-                            videoId=video_id_list[index],
-                            pageToken=self.__response["nextPageToken"],
-                            maxResults=maxResults,
-                        )
-                        .execute()
-                    )
-                else:
-                    break
         
+        # 비디오 개수 만큼 돌며 youtube에게 요청을 한다.
+        try:
+            for video_id in video_id_list:
+                self.__response = (
+                    self.__youtube.commentThreads()
+                    .list(
+                        part="id,snippet,replies", videoId=video_id, maxResults=maxResults
+                    )
+                    .execute()
+                )
+                # response의 개수 만큼 돌며 댓글들을 가져온다.
+                while self.__response:
+                    for item in self.__response["items"]:
+                        comment = item["snippet"]["topLevelComment"]["snippet"]
+                        self.__comment_list.append(
+                            [
+                                comment["videoId"],
+                                item["snippet"]["topLevelComment"]["id"],
+                                comment["textOriginal"],
+                                int(comment["likeCount"]),
+                                comment["publishedAt"],
+                                comment["updatedAt"],
+                            ]
+                        )
+
+                    # 다음 댓글이 있다면 다시 재요청을 보낸다.
+                    if "nextPageToken" in self.__response:
+                        self.__response = (
+                            self.__youtube.commentThreads()
+                            .list(
+                                part="id,snippet,replies",
+                                videoId=video_id,
+                                pageToken=self.__response["nextPageToken"],
+                                maxResults=maxResults,
+                            )
+                            .execute()
+                        )
+                    else:
+                        break
+        except:
+            pass    
         return self.__comment_list
