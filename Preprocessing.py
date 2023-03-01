@@ -7,7 +7,6 @@ import json
 
 from konlpy.tag import Okt
 from collections import Counter
-from wordcloud import WordCloud
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
@@ -164,7 +163,7 @@ def text_cleaning(text: str, stopwords: list) -> list:
 
     사용예제:
 
-    $ text_cleaning(df['text'][0])
+    > text_cleaning(df['text'][0])
     """
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
     result = hangul.sub("", str(text))
@@ -222,10 +221,10 @@ def neg_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
     return negative_sample_idx
 
 
-# hashtag column에서 해시태그만 남기기
-def extract_hashtags(text: str, name: str = "") -> str:
+# tags column에서 해시태그만 남기기
+def extract_tags(text: str, name: str = "") -> str:
     """
-    hashtag column에서 공백을 추가해서 해시태그만 반환한다.
+    tags column에서 공백을 추가해서 해시태그만 반환한다.
 
     파라미터:
 
@@ -235,56 +234,56 @@ def extract_hashtags(text: str, name: str = "") -> str:
 
     사용예제:
 
-    > test(df.hashtag[0])
-    > test(df.hashtag[0], "#오킹 ")
-    > df.hashtag.apply(test)
+    > test(df.tags[0])
+    > test(df.tags[0], "#오킹 ")
+    > df.tags.apply(test)
     """
     tags = " ".join(re.findall("#\w+", text))
     result = re.sub(name, "", tags)
     return result
 
 
-def extract_human_hashtag(text: str, df: pd.DataFrame, human_list_path: str = ""
+def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = ""
 ) -> str:
     """
-    df의 hashtag column에서 사람 태그만 남긴다.
+    df의 tags column에서 사람 태그만 남긴다.
 
     파라미터:
 
-    text : DataFrame의 hashtag column을 인자로 받는다.
+    text : DataFrame의 tags column을 인자로 받는다.
     df : 해당 DataFrame을 인자로 받는다. 이때, 반드시 받을 인자는 초기의 df이다.
     human_list_path : 인물리스트에 대한 파일 위치를 나타내는 문자열 값을 인자로 받는다. 기본값은 ("")없음.
 
     사용예제:
 
-    > prep.extract_one_hash(df.hashtag, df)
-    > new_df.hashtag.apply(lambda text: prep.extract_one_hash(text, new_df))
+    > prep.extract_one_hash(df.tags, df)
+    > new_df.tags.apply(lambda text: prep.extract_one_hash(text, new_df))
     """
     
     result = []
     target_list = text.split(" ")
-    most_list = hashtag_list(df)
+    most_list = tags_list(df)
 
     if human_list_path:
         human_array = pd.read_csv(
             human_list_path, encoding="utf-8", engine="python", sep="\t"
         ).values
 
-    for hashtag in target_list:
+    for tags in target_list:
         if human_list_path:  # human_list_path에 하나라도 있으면
-            if hashtag in most_list and hashtag in human_array:
-                result.append(hashtag)
+            if tags in most_list and tags in human_array:
+                result.append(tags)
         else:  # human_list_path에 하나도 없으면
-            if hashtag in most_list:
-                result.append(hashtag)
+            if tags in most_list:
+                result.append(tags)
     if len(result) == 0:
         result.append("None")
     return " ".join(result)
 
 
-def hashtag_list(df: pd.DataFrame) -> list:
+def tags_list(df: pd.DataFrame) -> list:
     """
-    DataFrame의 hashtag column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
+    DataFrame의 tags column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
 
     파라미터:
 
@@ -292,63 +291,64 @@ def hashtag_list(df: pd.DataFrame) -> list:
 
     사용예제:
 
-    > hashtag_list(df.hashtag)
+    > tags_list(df.tags)
     """
-    hashtag_list = []
-    for text in df.hashtag:
-        hashtag_list += text.split(" ")
-    return hashtag_list
+    tags_list = []
+    for text in df.tags:
+        tags_list += text.split(" ")
+    return tags_list
 
 
-def most_used_hashtag_list(df: pd.DataFrame) -> list:
+def most_used_tags_list(df: pd.DataFrame) -> list:
     """
     평균 이상으로 사용된 해시태그의 리스트를 반환한다.
 
     파라미터:
-    df : hashtag 열이 존재하는 DataFrame을 인자로 받는다. 이때, hashtag은 해시태그만 존재하여야 한다.
+    df : tags 열이 존재하는 DataFrame을 인자로 받는다. 이때, tags은 해시태그만 존재하여야 한다.
 
     사용예제:
-    > most_used_hashtag_list(df)
+    > most_used_tags_list(df)
     """
-    hashtag_count = Counter(hashtag_list(df))
-    hashtag_count_1 = list(hashtag_count.values())
+    tags_count = Counter(tags_list(df))
+    tags_count_1 = list(tags_count.values())
     most_used_hash_list = list(
         {
             key
-            for key, value in hashtag_count.items()
-            if value > np.mean(hashtag_count_1)
+            for key, value in tags_count.items()
+            if value > np.mean(tags_count_1)
         }
     )
     return most_used_hash_list
 
 
-def most_used_hashtag_df(df: pd.DataFrame) -> pd.DataFrame:
+def most_used_tags_df(df: pd.DataFrame) -> pd.DataFrame:
     """
     평균 이상으로 사용된 해시태그가 포함된 row의 DataFrame을 반환한다.
 
     파라미터:
 
-    df : hashtag 열이 존재하는 DataFrame을 인자로 받는다. 이때, hashtag은 해시태그만 존재하여야 한다.
+    df : tags 열이 존재하는 DataFrame을 인자로 받는다. 이때, tags은 해시태그만 존재하여야 한다.
 
     사용예제:
-    > prep.most_used_hashtag_df(df)
-    > (prep.most_used_hashtag_df(df).hashtag.str.contains('#방랑화가이병건') == True).sum()
+    > prep.most_used_tags_df(df)
+    > (prep.most_used_tags_df(df).tags.str.contains('#방랑화가이병건') == True).sum()
     """
-    many_hashtag_df = df.copy().drop(df.index, axis=0)
+    many_tags_df = df.copy().drop(df.index, axis=0)
 
-    for most_used_hashtag in most_used_hashtag_list(df):
-        df_desc_bool = df.hashtag.str.contains(most_used_hashtag)
+    for most_used_tags in most_used_tags_list(df):
+        df_desc_bool = df.tags.str.contains(most_used_tags)
         temp_df = df.loc[df_desc_bool]
-        many_hashtag_df = pd.concat([many_hashtag_df, temp_df])
+        many_tags_df = pd.concat([many_tags_df, temp_df])
 
-    many_hashtag_df.drop_duplicates(inplace=True)
-    return many_hashtag_df
+    many_tags_df.drop_duplicates(inplace=True)
+    return many_tags_df
 
 
 def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name:str=""
 )-> tuple:
     """
-    views_count, like_count, df_index를 각각 반환합니다.
+    해시태그 단위로, 조회수와 좋아요 수에 대한 각각의 대표값이 담긴 views_count, like_count와
+    해당 해시태그가 일치하는 DataFrame의 인덱스 df_index를 각각 반환합니다.
 
     인수:
     - df: 해시태그, 보기 및 좋아요를 포함한 비디오 정보가 포함된 pandas.DataFrame.
@@ -363,7 +363,7 @@ def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name
     해당 해시태그 및 비디오 인덱스에 대한 보기 또는 좋아요 수를 나타냅니다.
     """
     if tag_name:
-        df_index = df.loc[df.hashtag==tag_name].index
+        df_index = df.loc[df.tags==tag_name].index
     else:
         raise Exception("tag_name에 정확한 값을 입력하시오.")
 
@@ -387,7 +387,7 @@ def add_drop_row(df:pd.DataFrame, df_index:list, add_list:list) -> pd.DataFrame:
     Args:
     - df (pd.DataFrame): 특정 행을 제거할 DataFrame
     - df_index (list): 제거할 DataFrame 행의 인덱스 리스트
-    - add_list (list): 추가할 행의 정보를 담고 있는 리스트. 순서대로 video_id, category_id, category_name, title, views_count, like_count, uploaded_at, hashtag 정보를 담고 있음
+    - add_list (list): 추가할 행의 정보를 담고 있는 리스트. 순서대로 video_id, category_id, category_name, title, views_count, like_count, uploaded_at, tags 정보를 담고 있음
 
     Returns:
     - new_df (pd.DataFrame): 새롭게 업데이트된 DataFrame.
@@ -405,7 +405,7 @@ def add_drop_row(df:pd.DataFrame, df_index:list, add_list:list) -> pd.DataFrame:
         'views_count' : add_list[4],
         'like_count' : add_list[5],
         'uploaded_at' : add_list[6],
-        'hashtag' : add_list[7],
+        'tags' : add_list[7],
     }
 
     # 새로운 행 추가
@@ -423,7 +423,7 @@ def automatize_human_hash_df(df:pd.DataFrame, s_tag_name:str="", w_tag_name:str=
     함수 인자
     - df : pd.DataFrame 새로운 로우를 추가할 데이터프레임
     - s_tag_name : str 검색에 사용된 해시태그 이름, 기본값은 빈 문자열 ""
-    - w_tag_name : str 추가할 해시태그 이름. 해시태그로 시작해야하며, 이 값이 변경되면 새로운 로우의 hashtag값도 변경됩니다.
+    - w_tag_name : str 추가할 해시태그 이름. 해시태그로 시작해야하며, 이 값이 변경되면 새로운 로우의 tags값도 변경됩니다.
     - category_id : int 추가할 로우의 카테고리 ID. int형으로 지정되어야 합니다.
 
     함수 동작
@@ -439,8 +439,33 @@ def automatize_human_hash_df(df:pd.DataFrame, s_tag_name:str="", w_tag_name:str=
         raise Exception("해시태그나 카테고리 ID 값을 확인해주세요.")
     
     views_count, like_count, df_index = view_like_count_and_df_index(df, tag_name=s_tag_name)
-    add_list = [f'{w_tag_name}_video', 24, 'Entertainment', f'{w_tag_name}_title', views_count, like_count, f'{w_tag_name}_uploaded_at', w_tag_name]
+    add_list = [f'{w_tag_name}_video', category_id, 'Entertainment', f'{w_tag_name}_title', views_count, like_count, f'{w_tag_name}_uploaded_at', w_tag_name]
     new_df = add_drop_row(df, df_index, add_list)
     return new_df
 
 
+def get_video_statistics(df_videos: pd.DataFrame, df_comments: pd.DataFrame) -> tuple:
+    """
+    비디오 데이터프레임(df_videos)과 댓글 데이터프레임(df_comments)을 이용하여 각 비디오의 댓글 수, 조회수, 좋아요 수에 대한 딕셔너리를 생성합니다.
+
+    Args:
+    - df_videos (pandas.DataFrame) : 비디오 데이터프레임입니다. (video_id, title, channel_id, channel_title, category_id, publish_date, tags, views_count, likes, dislikes, description)
+    - df_comments
+      (pandas.DataFrame) : 댓글 데이터프레임입니다. (comment_id, author, video_id, content, publish_date)
+
+    Returns:
+    - tuple : 조회수, 좋아요 수, 댓글 수에 대한 딕셔너리를 반환합니다.
+    """
+
+    # 각 비디오의 댓글 수, 조회수, 좋아요 수를 계산합니다.
+    comment_count = df_comments.video_id.value_counts().values
+    video_list = df_videos.video_id.unique()
+    views_comment = df_videos.views_count.unique()
+    views_like = df_videos.like_count.unique()
+
+    # 각 비디오의 id를 key로 하고 댓글 수, 조회수, 좋아요 수를 value로 하는 딕셔너리를 생성합니다.
+    dict_video_comment = dict(zip(video_list, comment_count))    # {비디오_id : 댓글 수}
+    dict_video_views = dict(zip(video_list, views_comment))      # {비디오_id : 조회수}
+    dict_video_like = dict(zip(video_list, views_like))          # {비디오_id : 좋아요 수}
+
+    return dict_video_views, dict_video_like, dict_video_comment
