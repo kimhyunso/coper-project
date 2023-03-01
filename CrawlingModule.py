@@ -197,10 +197,10 @@ class YoutubeBuilder:
             video_id_list : 동영상의 ID 목록 ex) https://www.youtube.com/watch?v=BP1rFQtacU4 :: BP1rFQtacU4
             maxResults : 한 번에 몇개의 결과를 받을 것인가
         """
-        
+
         # 비디오 개수 만큼 돌며 youtube에게 요청을 한다.
-        try:
-            for video_id in video_id_list:
+        for video_id in video_id_list:
+            try:
                 self.__response = (
                     self.__youtube.commentThreads()
                     .list(
@@ -208,23 +208,27 @@ class YoutubeBuilder:
                     )
                     .execute()
                 )
-                # response의 개수 만큼 돌며 댓글들을 가져온다.
-                while self.__response:
-                    for item in self.__response["items"]:
-                        comment = item["snippet"]["topLevelComment"]["snippet"]
-                        self.__comment_list.append(
-                            [
-                                comment["videoId"],
-                                item["snippet"]["topLevelComment"]["id"],
-                                comment["textOriginal"],
-                                int(comment["likeCount"]),
-                                comment["publishedAt"],
-                                comment["updatedAt"],
-                            ]
-                        )
+            except:
+                pass
+            # response의 개수 만큼 돌며 댓글들을 가져온다.
+            while self.__response:
+                for item in self.__response["items"]:
+                    comment = item["snippet"]["topLevelComment"]["snippet"]
+                    self.__comment_list.append(
+                        [
+                            comment["videoId"],
+                            item["snippet"]["topLevelComment"]["id"],
+                            comment["textOriginal"],
+                            int(comment["likeCount"]),
+                            comment["publishedAt"],
+                            comment["updatedAt"],
+                        ]
+                    )
 
-                    # 다음 댓글이 있다면 다시 재요청을 보낸다.
-                    if "nextPageToken" in self.__response:
+                # 다음 댓글이 있다면 다시 재요청을 보낸다.
+                if "nextPageToken" in self.__response:
+                    try:
+                        
                         self.__response = (
                             self.__youtube.commentThreads()
                             .list(
@@ -235,8 +239,8 @@ class YoutubeBuilder:
                             )
                             .execute()
                         )
-                    else:
-                        break
-        except:
-            pass    
+                    except:
+                        pass
+                else:
+                    break
         return self.__comment_list
