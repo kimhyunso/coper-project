@@ -129,7 +129,6 @@ def returnWordcloud(word_count_dict):
     plt.axis("off")
     plt.show()
 
-
 def get_category_barplot(df: pd.DataFrame, g_size: tuple = (16, 10), font: str = "Malgun Gothic", theme: str = "Pastel1") -> None:
     """
     데이터프레임의 카테고리 별 개수를 막대 그래프로 시각화하는 함수
@@ -262,4 +261,5 @@ def show_boxplot(df:pd.DataFrame, col_x_y:tuple, graph_size:tuple=(30, 20)):
     # x축 라벨의 폰트 크기를 설정합니다.
     plt.xticks(fontsize = 8.5)
     # 그래프를 화면에 출력합니다.
+
     plt.show()
