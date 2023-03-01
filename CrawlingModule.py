@@ -10,6 +10,7 @@ class YoutubeBuilder:
     __comment_list = list()
     __videos_list = list()
     __cate_gory_dict = dict()
+    __none_video_id_list = list()
 
     '''
     Attributes:
@@ -209,6 +210,7 @@ class YoutubeBuilder:
                     .execute()
                 )
             except:
+                self.__none_video_id_list.append(video_id)
                 continue
             # response의 개수 만큼 돌며 댓글들을 가져온다.
             while self.__response:
@@ -239,7 +241,8 @@ class YoutubeBuilder:
                             .execute()
                         )
                     except:
+                        self.__none_video_id_list.append(video_id)
                         continue
                 else:
                     break
-        return self.__comment_list
+        return self.__comment_list, self.__none_video_id_list
