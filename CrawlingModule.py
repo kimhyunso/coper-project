@@ -209,7 +209,7 @@ class YoutubeBuilder:
                     .execute()
                 )
             except:
-                pass
+                continue
             # response의 개수 만큼 돌며 댓글들을 가져온다.
             while self.__response:
                 for item in self.__response["items"]:
@@ -228,7 +228,6 @@ class YoutubeBuilder:
                 # 다음 댓글이 있다면 다시 재요청을 보낸다.
                 if "nextPageToken" in self.__response:
                     try:
-                        
                         self.__response = (
                             self.__youtube.commentThreads()
                             .list(
@@ -240,7 +239,7 @@ class YoutubeBuilder:
                             .execute()
                         )
                     except:
-                        pass
+                        continue
                 else:
                     break
         return self.__comment_list
