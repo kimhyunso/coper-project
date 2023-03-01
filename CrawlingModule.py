@@ -188,7 +188,7 @@ class YoutubeBuilder:
                 break
         return self.__videos_list
 
-    def get_comments(self, video_id_list, maxResults=100) -> list:
+    def get_comments(self, video_id_list, maxResults=50) -> list:
 
         """
         YoutubeAPI를 통해 동영상의 댓글들을 가져온다.
@@ -199,15 +199,17 @@ class YoutubeBuilder:
         """
 
         # 비디오 개수 만큼 돌며 youtube에게 요청을 한다.
-
-        for index in range(len(video_id_list) // 2):
-            self.__response = (
-                self.__youtube.commentThreads()
-                .list(
-                    part="id,snippet,replies", videoId=video_id_list[index], maxResults=maxResults
+        for video_id in video_id_list:
+            try:
+                self.__response = (
+                    self.__youtube.commentThreads()
+                    .list(
+                        part="id,snippet,replies", videoId=video_id, maxResults=maxResults
+                    )
+                    .execute()
                 )
-                .execute()
-            )
+            except:
+                pass
             # response의 개수 만큼 돌며 댓글들을 가져온다.
             while self.__response:
                 for item in self.__response["items"]:
@@ -225,17 +227,20 @@ class YoutubeBuilder:
 
                 # 다음 댓글이 있다면 다시 재요청을 보낸다.
                 if "nextPageToken" in self.__response:
-                    self.__response = (
-                        self.__youtube.commentThreads()
-                        .list(
-                            part="id,snippet,replies",
-                            videoId=video_id_list[index],
-                            pageToken=self.__response["nextPageToken"],
-                            maxResults=maxResults,
+                    try:
+                        
+                        self.__response = (
+                            self.__youtube.commentThreads()
+                            .list(
+                                part="id,snippet,replies",
+                                videoId=video_id,
+                                pageToken=self.__response["nextPageToken"],
+                                maxResults=maxResults,
+                            )
+                            .execute()
                         )
-                        .execute()
-                    )
+                    except:
+                        pass
                 else:
                     break
-        
         return self.__comment_list
