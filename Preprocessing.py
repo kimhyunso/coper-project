@@ -243,8 +243,7 @@ def extract_tags(text: str, name: str = "") -> str:
     return result
 
 
-def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = ""
-) -> str:
+def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = "") -> str:
     """
     df의 tags column에서 사람 태그만 남긴다.
 
@@ -259,7 +258,7 @@ def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = ""
     > prep.extract_one_hash(df.tags, df)
     > new_df.tags.apply(lambda text: prep.extract_one_hash(text, new_df))
     """
-    
+
     result = []
     target_list = text.split(" ")
     most_list = tags_list(df)
@@ -312,11 +311,7 @@ def most_used_tags_list(df: pd.DataFrame) -> list:
     tags_count = Counter(tags_list(df))
     tags_count_1 = list(tags_count.values())
     most_used_hash_list = list(
-        {
-            key
-            for key, value in tags_count.items()
-            if value > np.mean(tags_count_1)
-        }
+        {key for key, value in tags_count.items() if value > np.mean(tags_count_1)}
     )
     return most_used_hash_list
 
@@ -344,8 +339,9 @@ def most_used_tags_df(df: pd.DataFrame) -> pd.DataFrame:
     return many_tags_df
 
 
-def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name:str=""
-)-> tuple:
+def view_like_count_and_df_index(
+    df: pd.DataFrame, represent: str = "mean", tag_name: str = ""
+) -> tuple:
     """
     해시태그 단위로, 조회수와 좋아요 수에 대한 각각의 대표값이 담긴 views_count, like_count와
     해당 해시태그가 일치하는 DataFrame의 인덱스 df_index를 각각 반환합니다.
@@ -363,7 +359,7 @@ def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name
     해당 해시태그 및 비디오 인덱스에 대한 보기 또는 좋아요 수를 나타냅니다.
     """
     if tag_name:
-        df_index = df.loc[df.tags==tag_name].index
+        df_index = df.loc[df.tags == tag_name].index
     else:
         raise Exception("tag_name에 정확한 값을 입력하시오.")
 
@@ -376,11 +372,11 @@ def view_like_count_and_df_index(df:pd.DataFrame, represent:str="mean", tag_name
     elif represent == "median":
         views_count = np.median(df.loc[df_index, "views_count"])
         like_count = np.median(df.loc[df_index, "like_count"])
-        
+
     return views_count, like_count, df_index
 
 
-def add_drop_row(df:pd.DataFrame, df_index:list, add_list:list) -> pd.DataFrame:
+def add_drop_row(df: pd.DataFrame, df_index: list, add_list: list) -> pd.DataFrame:
     """
     DataFrame에서 특정 인덱스의 행을 제거하고, 새로운 행을 추가하여 반환하는 함수.
 
@@ -398,14 +394,14 @@ def add_drop_row(df:pd.DataFrame, df_index:list, add_list:list) -> pd.DataFrame:
 
     # 추가할 행의 정보를 담은 딕셔너리 생성
     new_row_dict = {
-        'video_id' : add_list[0],
-        'category_id' : add_list[1],
-        'category_name' : add_list[2],
-        'title' : add_list[3],
-        'views_count' : add_list[4],
-        'like_count' : add_list[5],
-        'uploaded_at' : add_list[6],
-        'tags' : add_list[7],
+        "video_id": add_list[0],
+        "category_id": add_list[1],
+        "category_name": add_list[2],
+        "title": add_list[3],
+        "views_count": add_list[4],
+        "like_count": add_list[5],
+        "uploaded_at": add_list[6],
+        "tags": add_list[7],
     }
 
     # 새로운 행 추가
@@ -415,7 +411,8 @@ def add_drop_row(df:pd.DataFrame, df_index:list, add_list:list) -> pd.DataFrame:
     return new_df
 
 
-def automatize_human_hash_df(df:pd.DataFrame, s_tag_name:str="", w_tag_name:str="", category_id:int=0
+def automatize_human_hash_df(
+    df: pd.DataFrame, s_tag_name: str = "", w_tag_name: str = "", category_id: int = 0
 ) -> pd.DataFrame:
     """
     이 함수는 pd.DataFrame 객체와 함께 인자로 받은 해시태그 이름과 카테고리 ID를 이용하여 새로운 로우를 추가하는 함수입니다.
@@ -429,17 +426,28 @@ def automatize_human_hash_df(df:pd.DataFrame, s_tag_name:str="", w_tag_name:str=
     함수 동작
     - s_tag_name을 이용하여 조회수와 좋아요 수 그리고 인덱스를 구합니다.
     - w_tag_name과 category_id로부터 새로운 로우를 생성합니다. 구한 인덱스를 이용하여 데이터프레임에서 해당 로우를 삭제하고, 새로운 로우를 추가합니다.
-    
+
     이후, 변경된 데이터프레임을 반환합니다.
-    
+
     함수 예외
     - w_tag_name이 빈 문자열이거나, category_id가 지정되지 않은 경우 Exception 예외를 발생합니다.
     """
     if not w_tag_name or not category_id or w_tag_name[0] != "#":
         raise Exception("해시태그나 카테고리 ID 값을 확인해주세요.")
-    
-    views_count, like_count, df_index = view_like_count_and_df_index(df, tag_name=s_tag_name)
-    add_list = [f'{w_tag_name}_video', category_id, 'Entertainment', f'{w_tag_name}_title', views_count, like_count, f'{w_tag_name}_uploaded_at', w_tag_name]
+
+    views_count, like_count, df_index = view_like_count_and_df_index(
+        df, tag_name=s_tag_name
+    )
+    add_list = [
+        f"{w_tag_name}_video",
+        category_id,
+        "Entertainment",
+        f"{w_tag_name}_title",
+        views_count,
+        like_count,
+        f"{w_tag_name}_uploaded_at",
+        w_tag_name,
+    ]
     new_df = add_drop_row(df, df_index, add_list)
     return new_df
 
@@ -464,8 +472,8 @@ def get_video_statistics(df_videos: pd.DataFrame, df_comments: pd.DataFrame) -> 
     views_like = df_videos.like_count.unique()
 
     # 각 비디오의 id를 key로 하고 댓글 수, 조회수, 좋아요 수를 value로 하는 딕셔너리를 생성합니다.
-    dict_video_comment = dict(zip(video_list, comment_count))    # {비디오_id : 댓글 수}
-    dict_video_views = dict(zip(video_list, views_comment))      # {비디오_id : 조회수}
-    dict_video_like = dict(zip(video_list, views_like))          # {비디오_id : 좋아요 수}
+    dict_video_comment = dict(zip(video_list, comment_count))  # {비디오_id : 댓글 수}
+    dict_video_views = dict(zip(video_list, views_comment))  # {비디오_id : 조회수}
+    dict_video_like = dict(zip(video_list, views_like))  # {비디오_id : 좋아요 수}
 
     return dict_video_views, dict_video_like, dict_video_comment
