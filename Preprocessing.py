@@ -547,5 +547,8 @@ def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
     
     temp_index = list(set(temp_index))
     habang_upper2_df = habang_upper2_df.loc[temp_index]
+    habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: x.split(" "))
+    habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: sorted(x))
+    habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: " ".join(x))
 
     return none_df, habang_upper1_df, habang_upper2_df
