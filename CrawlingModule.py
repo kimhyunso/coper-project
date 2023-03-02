@@ -190,6 +190,8 @@ class YoutubeBuilder:
                             )
                             .execute()
                         )
+                    else:
+                        break
                     # 요청을 한 번 할때 break를 할 수 있도록 +를 해줌
                     count += 1
                 break
