@@ -498,8 +498,9 @@ def encoded_human_dict(df:pd.DataFrame) -> dict:
     return  list_dict
 
 
-def encoded_human_df(df:pd.DataFrame) -> pd.DataFrame:
+def encoded_human_df(df:pd.DataFrame, creator:str) -> pd.DataFrame:
     df_copy = df.copy().reset_index(drop=True)
+    df_copy["human_count_class"] = np.nan
     df_copy["encoded_tags"] = np.nan
     list_dict = encoded_human_dict(df)
 
@@ -511,8 +512,19 @@ def encoded_human_df(df:pd.DataFrame) -> pd.DataFrame:
         for human in humans.split(" "):
             temp_list.append(list_dict[human])
         df_copy['encoded_tags'][idx] = temp_list
-
+    
+    for idx, enc_tags in enumerate(df_copy.encoded_tags.values):
+        if enc_tags[0] == list_dict[creator]:
+            df_copy.human_count_class[idx] = 0
+            continue
+        if len(enc_tags) == 1:
+            df_copy.human_count_class[idx] = 1
+        else:
+            df_copy.human_count_class[idx] = 2
+    df_copy.human_count_class = df_copy.human_count_class.astype(int)
+    
     return df_copy
+
 
 
 def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
