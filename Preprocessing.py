@@ -519,20 +519,21 @@ def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
     none_df = df.loc[df.encoded_tags.apply(lambda x: x == [25])]
     habang_upper1_df = df.drop(none_df.index)
     habang_upper2_df = habang_upper1_df.copy().reset_index(drop=True)
-
+    
     temp_index = []
-
-    for idx, value in enumerate(habang_upper2_df.encoded_tags.values):
-        if len(value) >= 2:
-            temp_index += habang_upper2_df.loc[habang_upper2_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
-
-    habang_upper2_df = habang_upper2_df.loc[temp_index]
-    temp_index = []
-
     for idx, value in enumerate(habang_upper1_df.encoded_tags.values):
         if len(value) == 1:
             temp_index += habang_upper1_df.loc[habang_upper1_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
-
+        
+    temp_index = list(set(temp_index))
     habang_upper1_df = habang_upper1_df.loc[temp_index]
+
+    temp_index = []
+    for idx, value in enumerate(habang_upper2_df.encoded_tags.values):
+        if len(value) >= 2:
+            temp_index += habang_upper2_df.loc[habang_upper2_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
+    
+    temp_index = list(set(temp_index))
+    habang_upper2_df = habang_upper2_df.loc[temp_index]
 
     return none_df, habang_upper1_df, habang_upper2_df
