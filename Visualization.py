@@ -110,3 +110,6 @@ def returnWordcloud(word_count_dict):
     plt.imshow(wordcloud, interpolation="lanczos")
     plt.axis("off")
     plt.show()
+
+
+    
