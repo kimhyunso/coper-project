@@ -172,6 +172,7 @@ def text_cleaning(text: str, stopwords: list) -> list:
     nouns = tagger.nouns(result)  # 여기까지 정규표현식 적용
     nouns = [x for x in nouns if len(x) > 1]  # 한글자 키워드 제거
     nouns = [x for x in nouns if x not in stopwords]  # 불용어 처리
+    Counter(nouns)
     return nouns
 
 
