@@ -1,6 +1,7 @@
 from googleapiclient.discovery import build
 import pandas as pd
 import numpy as np
+import time
 
 
 class YoutubeBuilder:
@@ -10,6 +11,7 @@ class YoutubeBuilder:
     __comment_list = list()
     __videos_list = list()
     __cate_gory_dict = dict()
+    __none_video_id_list = list()
 
     '''
     Attributes:
@@ -78,6 +80,8 @@ class YoutubeBuilder:
             channelId : 알아오고 싶은 채널의 ID
             maxResults : 한 번에 받을 수 있는 결과값
         '''
+
+
         # youtube searchAPI를 통해 video_id들을 가져옴
         self.__response = (
             self.__youtube.search()
@@ -96,14 +100,14 @@ class YoutubeBuilder:
 
         # response 안에서 데이터들을 추출해옴
         while self.__response:
-
             # response 안의 items안에 id안에 videoId가 있음
             for item in self.__response["items"]:
                 self.__video_id_list.append(item["id"]["videoId"])
+                
             # count를 돌면서 100이 되면 while문을 빠져나옴 maxResults에 따라 달라짐 ex) maxResults 50개 -> 50 * 100 => 5000개의 데이터를 가져옴
             if count == 20:
                 break
-
+            
             # 다음 데이터가 있을 경우 다시 요청을 함
             if "nextPageToken" in self.__response:
                 self.__response = (
@@ -118,6 +122,9 @@ class YoutubeBuilder:
                     )
                     .execute()
                 )
+            else:
+                break
+
             # 요청을 한 번 할때 break를 할 수 있도록 +를 해줌
             count += 1
         return self.__video_id_list
@@ -188,7 +195,7 @@ class YoutubeBuilder:
                 break
         return self.__videos_list
 
-    def get_comments(self, video_id_list, maxResults=100) -> list:
+    def get_comments(self, video_id_list, maxResults=50) -> list:
 
         """
         YoutubeAPI를 통해 동영상의 댓글들을 가져온다.
@@ -199,15 +206,19 @@ class YoutubeBuilder:
         """
 
         # 비디오 개수 만큼 돌며 youtube에게 요청을 한다.
-
-        for index in range(len(video_id_list) // 2):
-            self.__response = (
-                self.__youtube.commentThreads()
-                .list(
-                    part="id,snippet,replies", videoId=video_id_list[index], maxResults=maxResults
+        for video_id in video_id_list:
+            try:
+                self.__response = (
+                    self.__youtube.commentThreads()
+                    .list(
+                        part="id,snippet,replies", videoId=video_id, maxResults=maxResults
+                    )
+                    .execute()
                 )
-                .execute()
-            )
+            except:
+                self.__none_video_id_list.append(video_id)
+                continue
+
             # response의 개수 만큼 돌며 댓글들을 가져온다.
             while self.__response:
                 for item in self.__response["items"]:
@@ -225,17 +236,20 @@ class YoutubeBuilder:
 
                 # 다음 댓글이 있다면 다시 재요청을 보낸다.
                 if "nextPageToken" in self.__response:
-                    self.__response = (
-                        self.__youtube.commentThreads()
-                        .list(
-                            part="id,snippet,replies",
-                            videoId=video_id_list[index],
-                            pageToken=self.__response["nextPageToken"],
-                            maxResults=maxResults,
+                    try:
+                        self.__response = (
+                            self.__youtube.commentThreads()
+                            .list(
+                                part="id,snippet,replies",
+                                videoId=video_id,
+                                pageToken=self.__response["nextPageToken"],
+                                maxResults=maxResults,
+                            )
+                            .execute()
                         )
-                        .execute()
-                    )
+                    except:
+                        self.__none_video_id_list.append(video_id)
+                        continue
                 else:
                     break
-        
-        return self.__comment_list
+        return self.__comment_list, self.__none_video_id_list
