@@ -9,6 +9,7 @@ from konlpy.tag import Okt
 from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.preprocessing import LabelEncoder
 
 import warnings
 
@@ -477,3 +478,61 @@ def get_video_statistics(df_videos: pd.DataFrame, df_comments: pd.DataFrame) -> 
     dict_video_like = dict(zip(video_list, views_like))  # {비디오_id : 좋아요 수}
 
     return dict_video_views, dict_video_like, dict_video_comment
+
+
+def encoded_human_dict(df:pd.DataFrame) -> dict:
+    new_list = []
+    df_copy = df.copy().reset_index(drop=True)
+    df_copy["encoded_tags"] = np.nan
+
+    for human in df_copy.tags.unique():
+        temp_list = human.split(" ")
+        new_list += temp_list
+
+    new_list = list(set(new_list))
+
+    encoder = LabelEncoder()
+    encoded_list = encoder.fit_transform(new_list)
+    list_dict = dict(zip(new_list, encoded_list))
+
+    return  list_dict
+
+
+def encoded_human_df(df:pd.DataFrame) -> pd.DataFrame:
+    df_copy = df.copy().reset_index(drop=True)
+    df_copy["encoded_tags"] = np.nan
+    list_dict = encoded_human_dict(df)
+
+    # "encoded_tags" 컬럼의 데이터 타입을 object로 변경합니다.
+    df_copy["encoded_tags"] = df_copy["encoded_tags"].astype(object)
+
+    for idx, humans in enumerate(df_copy.tags.values):
+        temp_list = []
+        for human in humans.split(" "):
+            temp_list.append(list_dict[human])
+        df_copy['encoded_tags'][idx] = temp_list
+
+    return df_copy
+
+
+def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
+    none_df = df.loc[df.encoded_tags.apply(lambda x: x == [25])]
+    habang_upper1_df = df.drop(none_df.index)
+    habang_upper2_df = habang_upper1_df.copy().reset_index(drop=True)
+
+    temp_index = []
+
+    for idx, value in enumerate(habang_upper2_df.encoded_tags.values):
+        if len(value) >= 2:
+            temp_index += habang_upper2_df.loc[habang_upper2_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
+
+    habang_upper2_df = habang_upper2_df.loc[temp_index]
+    temp_index = []
+
+    for idx, value in enumerate(habang_upper1_df.encoded_tags.values):
+        if len(value) == 1:
+            temp_index += habang_upper1_df.loc[habang_upper1_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
+
+    habang_upper1_df = habang_upper1_df.loc[temp_index]
+
+    return none_df, habang_upper1_df, habang_upper2_df
