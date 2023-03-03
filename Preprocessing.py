@@ -12,6 +12,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.preprocessing import LabelEncoder
 
 import warnings
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
@@ -553,3 +554,37 @@ def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
     habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: " ".join(x))
 
     return none_df, habang_upper1_df, habang_upper2_df
+
+def unique_video_id_to_dict(df):
+    unique_video_id = df.video_id.unique()
+    unique_video_id_like_count_dict = dict()
+
+    for video_id in unique_video_id:
+        unique_video_id_like_count_dict[video_id] = df.loc[df.video_id == video_id].like_count.sum()
+
+    return unique_video_id_like_count_dict
+
+
+def video_on_like_count_sum(df):
+    # 비디오별 댓글 좋아요 수
+    unique_video_id_like_count_dict = unique_video_id_to_dict(df)
+    # 내림차순 정렬
+    comments_like_sum = sorted(unique_video_id_like_count_dict.items(), key=lambda x:x[1], reverse=True)
+
+    video_on_comments_like_sum = list()
+
+    for idx, value in enumerate(comments_like_sum):
+        if idx == 10:
+            break
+        video_on_comments_like_sum.append(value)
+
+    return video_on_comments_like_sum
+
+
+
+def created_df(df):
+    new_df = list()
+    stopwords = stopwords('./데이터/stopwords.txt')
+    video_on_comments_like_sum = video_on_like_count_sum(df)
+    for video_id in tqdm(video_on_comments_like_sum):
+        new_df.append(df.loc[df.video_id == video_id[0]].comment.apply(lambda x : text_cleaning(x, stopwords)))

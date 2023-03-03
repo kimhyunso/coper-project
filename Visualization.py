@@ -10,10 +10,14 @@ from collections import Counter
 from wordcloud import WordCloud
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+from PIL import Image
+
 
 import warnings
 
 warnings.filterwarnings("ignore")
+
+
 
 
 # barplot 시각화
@@ -302,3 +306,34 @@ def show_boxplot(df: pd.DataFrame, col_x_y: tuple, graph_size: tuple = (30, 20))
     # 그래프를 화면에 출력합니다.
 
     plt.show()
+
+
+
+def show_word_cloud(new_df:list):
+    font_path = r'C:/Windows/Fonts/malgun.ttf'
+    youtube_mask = np.array(Image.open('./데이터/youtube_logo.jfif'))
+
+
+    # def make_colors(word, font_size, position, orientation, random_state, **kwargs):
+    #     r = random_state.randint(170, 220)
+    #     g = random_state.randint(0, 20)
+    #     b = random_state.randint(0, 60)
+        
+    #     color = 'rgb(%d, %d, %d)' % (r,g,b)
+    #     return color
+
+    for df in new_df:
+        string = ''
+        for comment in df:
+            string += ' '.join(comment)
+            
+        wc = WordCloud(font_path=font_path, background_color='white', stopwords=['개소리', '존나', '개', '진짜'], mask=youtube_mask,
+            max_font_size=30, scale=7).generate(string)
+        plt.figure(figsize=(10, 5))
+        # wc.recolor(color_func=make_colors, random_state=True)
+        plt.axis('off')
+        plt.imshow(wc, interpolation='bilinear')
+        plt.show()
+        del string
+        # wc.to_file(filename="침착맨_원피스.png")
+
