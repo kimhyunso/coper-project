@@ -170,10 +170,9 @@ def text_cleaning(text: str, stopwords: list) -> list:
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
     result = hangul.sub("", str(text))
     tagger = Okt()
-    nouns = tagger.nouns(result)  # 여기까지 정규표현식 적용
+    nouns = tagger.nouns(result.strip())  # 여기까지 정규표현식 적용
     nouns = [x for x in nouns if len(x) > 1]  # 한글자 키워드 제거
     nouns = [x for x in nouns if x not in stopwords]  # 불용어 처리
-    Counter(nouns)
     return nouns
 
 
@@ -589,3 +588,4 @@ def created_df(df) -> list:
     for video_id in tqdm(video_on_comments_like_sum):
         new_df.append(df.loc[df.video_id == video_id[0]].comment.apply(lambda x : text_cleaning(x, stop_words)))
     return new_df
+
