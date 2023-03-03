@@ -246,7 +246,7 @@ def extract_tags(text: str, name: str = "") -> str:
     return result
 
 
-def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = "") -> str:
+def extract_human_tags(text: str, df: pd.DataFrame, col_name:str, human_list_path: str = "") -> str:
     """
     df의 tags column에서 사람 태그만 남긴다.
 
@@ -264,7 +264,7 @@ def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = "") -
 
     result = []
     target_list = text.split(" ")
-    most_list = tags_list(df)
+    most_list = str_list(df, col_name)
 
     if human_list_path:
         human_array = pd.read_csv(
@@ -283,7 +283,7 @@ def extract_human_tags(text: str, df: pd.DataFrame, human_list_path: str = "") -
     return " ".join(result)
 
 
-def tags_list(df: pd.DataFrame) -> list:
+def str_list(df: pd.DataFrame, col_name:str) -> list:
     """
     DataFrame의 tags column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
 
@@ -293,15 +293,15 @@ def tags_list(df: pd.DataFrame) -> list:
 
     사용예제:
 
-    > tags_list(df.tags)
+    > str_list(df, col_name)
     """
     tags_list = []
-    for text in df.tags:
-        tags_list += text.split(" ")
+    for text in df[col_name]:
+        tags_list += text
     return tags_list
 
 
-def most_used_tags_list(df: pd.DataFrame) -> list:
+def most_used_str_list(df: pd.DataFrame, col_name:str) -> list:
     """
     평균 이상으로 사용된 해시태그의 리스트를 반환한다.
 
@@ -309,9 +309,9 @@ def most_used_tags_list(df: pd.DataFrame) -> list:
     df : tags 열이 존재하는 DataFrame을 인자로 받는다. 이때, tags은 해시태그만 존재하여야 한다.
 
     사용예제:
-    > most_used_tags_list(df)
+    > most_used_str_list(df, "tags")
     """
-    tags_count = Counter(tags_list(df))
+    tags_count = Counter(str_list(df, col_name))
     tags_count_1 = list(tags_count.values())
     most_used_hash_list = list(
         {key for key, value in tags_count.items() if value > np.mean(tags_count_1)}
@@ -319,7 +319,7 @@ def most_used_tags_list(df: pd.DataFrame) -> list:
     return most_used_hash_list
 
 
-def most_used_tags_df(df: pd.DataFrame) -> pd.DataFrame:
+def most_used_str_df(df: pd.DataFrame, col_name:str) -> pd.DataFrame:
     """
     평균 이상으로 사용된 해시태그가 포함된 row의 DataFrame을 반환한다.
 
@@ -333,8 +333,8 @@ def most_used_tags_df(df: pd.DataFrame) -> pd.DataFrame:
     """
     many_tags_df = df.copy().drop(df.index, axis=0)
 
-    for most_used_tags in most_used_tags_list(df):
-        df_desc_bool = df.tags.str.contains(most_used_tags)
+    for most_used_tags in most_used_str_list(df, col_name):
+        df_desc_bool = df[col_name].str.contains(most_used_tags)
         temp_df = df.loc[df_desc_bool]
         many_tags_df = pd.concat([many_tags_df, temp_df])
 
@@ -555,7 +555,7 @@ def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
 
     return none_df, habang_upper1_df, habang_upper2_df
 
-def unique_video_id_to_dict(df):
+def unique_video_id_to_dict(df:pd.DataFrame) -> dict:
     unique_video_id = df.video_id.unique()
     unique_video_id_like_count_dict = dict()
 
@@ -582,9 +582,10 @@ def video_on_like_count_sum(df):
 
 
 
-def created_df(df):
+def created_df(df) -> list:
     new_df = list()
-    stopwords = stopwords('./데이터/stopwords.txt')
+    stop_words = stopwords('./데이터/stopwords.txt')
     video_on_comments_like_sum = video_on_like_count_sum(df)
     for video_id in tqdm(video_on_comments_like_sum):
-        new_df.append(df.loc[df.video_id == video_id[0]].comment.apply(lambda x : text_cleaning(x, stopwords)))
+        new_df.append(df.loc[df.video_id == video_id[0]].comment.apply(lambda x : text_cleaning(x, stop_words)))
+    return new_df
