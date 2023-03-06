@@ -12,7 +12,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.preprocessing import LabelEncoder
 
 import warnings
-from tqdm import tqdm
+# from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
