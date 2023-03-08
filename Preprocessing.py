@@ -198,7 +198,7 @@ def extract_human_tags(
     return " ".join(result)
 
 
-def str_list(df: pd.DataFrame, col_name: str) -> list:
+def str_list(df: pd.DataFrame, col_name: str, split:bool=True) -> list:
     """
     DataFrame의 tags column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
 
@@ -212,7 +212,8 @@ def str_list(df: pd.DataFrame, col_name: str) -> list:
     """
     tags_list = []
     for text in df[col_name]:
-        # text = text.split()
+        if split:
+            text = text.split()
         tags_list += text
     return tags_list
 
@@ -616,7 +617,7 @@ def word_freq(word_count_stop_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
     - new_df : pd.DataFrame : 각 단어와 출현 빈도수가 기록된 새로운 데이터프레임
     """
-    comm_map_second = Counter(str_list(word_count_stop_df, "comment"))
+    comm_map_second = Counter(str_list(word_count_stop_df, "comment", False))
 
     new_df = pd.DataFrame(
         {
