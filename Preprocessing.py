@@ -12,6 +12,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.preprocessing import LabelEncoder
 
 import warnings
+
 # from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
@@ -82,59 +83,12 @@ def text_cleaning(text: str, stopwords: list) -> list:
     > text_cleaning(df['text'][0])
     """
     hangul = re.compile("[^ ㄱ-ㅣ가-힣]")
-    result = hangul.sub("", str(text))
+    result = hangul.sub("", str(text))  # 여기까지 정규표현식 적용
     tagger = Okt()
-    nouns = tagger.nouns(result.strip())  # 여기까지 정규표현식 적용
+    nouns = tagger.nouns(result.strip())  # 명사 형태소 추출
     nouns = [x for x in nouns if len(x) > 1]  # 한글자 키워드 제거
     nouns = [x for x in nouns if x not in stopwords]  # 불용어 처리
     return nouns
-
-
-def invert_text_to_vect(words: list) -> list:
-    result = []
-    word_document_path = (
-        "C:/Users/TECH2_07/Desktop/이도원 프로젝트 폴더/자료/KnuSentiLex/SentiWord_info - 복사본.json"
-    )
-    with open(word_document_path, encoding="utf-8", mode="r") as f:
-        data = json.load(f)
-
-    for i in range(0, len(data)):
-        for word in words:
-            if word == data[i]["word"]:
-                result.append(int(data[i]["polarity"]))
-    return result
-
-
-# 긍정적 단어의 인덱스
-def pos_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
-    """
-    긍정적인 단어들의 인덱스를 반환한다.
-
-    파라미터:
-
-    dataframe : 반환할 단어가 포함된 DataFrame을 인자로 받는다.
-    sample_size : 추출할 샘플의 크기를 지정하는 Integer값을 인자로 받는다.
-
-    사용예제:
-
-    pos_word_index(df, df.y.value_counts()[0])
-    """
-    positive_sample_idx = (
-        dataframe[dataframe["y"] == 2]
-        .sample(sample_size, random_state=33)
-        .index.tolist()
-    )
-    return positive_sample_idx
-
-
-# 부정적 단어의 인덱스
-def neg_word_index(dataframe: pd.DataFrame, sample_size: int) -> list:
-    negative_sample_idx = (
-        dataframe[dataframe["y"] == 1]
-        .sample(sample_size, random_state=33)
-        .index.tolist()
-    )
-    return negative_sample_idx
 
 
 # tags column에서 해시태그만 남기기
@@ -198,7 +152,7 @@ def extract_human_tags(
     return " ".join(result)
 
 
-def str_list(df: pd.DataFrame, col_name: str, split:bool=True) -> list:
+def str_list(df: pd.DataFrame, col_name: str, split: bool = True) -> list:
     """
     DataFrame의 tags column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
 
@@ -502,7 +456,7 @@ def split_df_by_habang(df: pd.DataFrame) -> tuple:
     # 'habang_upper1_df'에서 '민족군(1차)'에 속하는 row를 찾아서 temp_index에 저장합니다.
     temp_index = []
     for value in habang_upper1_df.encoded_tags.values:
-        if len(value) == 1:     # 1인과 같이 방송을 진행했다면,
+        if len(value) == 1:  # 1인과 같이 방송을 진행했다면,
             temp_index += habang_upper1_df.loc[
                 habang_upper1_df.encoded_tags.apply(lambda x: x == value)
             ].index.tolist()
@@ -513,7 +467,7 @@ def split_df_by_habang(df: pd.DataFrame) -> tuple:
     # 'habang_upper2_df'에서 '민족군(2차)'에 속하는 row를 찾아서 temp_index에 저장합니다.
     temp_index = []
     for idx, value in enumerate(habang_upper2_df.encoded_tags.values):
-        if len(value) >= 2:     # 2인 이상과 같이 방송을 진행했다면,
+        if len(value) >= 2:  # 2인 이상과 같이 방송을 진행했다면,
             temp_index += habang_upper2_df.loc[
                 habang_upper2_df.encoded_tags.apply(lambda x: x == value)
             ].index.tolist()
