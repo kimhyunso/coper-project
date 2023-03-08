@@ -38,92 +38,6 @@ def apply_regular_expression(text: str) -> str:
     return result
 
 
-# nouns 변수 반환
-def nouns(sentence: str) -> list:
-    """
-    문장 한 줄을 명사(nouns) 단위로 분해한 리스트를 반환한다.
-    예를 들어, '여행에 집중할수 있게 편안한 휴식을 제공하는 호텔이었습니다' 를 입력 받으면
-    ['여행', '집중', '휴식', '제공', '호텔'] 을 반환한다.
-
-    파라미터:
-
-    sentence : 문장 한 줄을 인자로 받는다.
-
-    사용예제:
-
-    return_nouns(df['text'][0])
-    > ['여행', '집중', '휴식', '제공', '호텔', '위치', '선정', '또한', '청소', '청결', '상태']
-
-    nouns_tagger.nouns(apply_regular_expression("".join(sentence['text'].tolist())))
-    > [ '스테이', '위치', '신라', ~~~~~ '스타벅스', '번화가', '전',]
-    """
-    from konlpy.tag import Okt
-
-    nouns_tagger = Okt()
-    nouns = nouns_tagger.nouns(apply_regular_expression(sentence))
-    return nouns
-
-
-# counter 변수 반환
-def counter(nouns: list) -> list:
-    """
-    명사 리스트에서 각 명사의 갯수가 몇개인지 반환한다.
-    반환값은 기본적으로 list이지만 list 내부는 ('명사', 갯수)의 튜플 형태이다.
-    자세한 건 사용예 참조.
-
-    파라미터:
-
-    nouns : 명사 리스트를 인자로 받는다.
-
-    사용예제:
-
-    return_counter(nouns).most_common(10)
-    >
-    [('호텔', 803),
-    ('수', 498),
-    ('것', 436),
-    ('방', 330),
-    ('위치', 328),
-    ('우리', 327),
-    ('곳', 320),
-    ('공항', 307),
-    ('직원', 267),
-    ('매우', 264)]
-    """
-    counter = Counter(nouns)
-    return counter
-
-
-# 사용법 : remove_one_letter_noun(counter)
-def remove_one_letter_noun(counter: list) -> list:
-    """
-    한 글자 명사를 제거한 list 객체를 반환한다.
-
-    파라미터:
-
-    counter : Collections.Counter 메소드에 의해 처리된 list값을 인자로 받는다.
-    즉, '단어' : 갯수 튜플로 감싸진 리스트 형태이다.
-
-    사용예제:
-
-    remove_one_letter_noun(counter).most_common(10)
-
-    >
-    [('호텔', 803),
-    ('위치', 328),
-    ('우리', 327),
-    ('공항', 307),
-    ('직원', 267),
-    ('매우', 264),
-    ('가격', 245),
-    ('객실', 244),
-    ('시설', 215),
-    ('제주', 192)]
-    """
-    available_counter = Counter({x: counter[x] for x in counter if len(x) > 1})
-    return available_counter
-
-
 # 불용어 리스트 추가
 # 사용법 : add_stopwords(['이거', '저거', '호텔'])
 def stopwords(stopwords_path: str, stopwords_list: list = [""]) -> list:
@@ -245,7 +159,9 @@ def extract_tags(text: str, name: str = "") -> str:
     return result
 
 
-def extract_human_tags(text: str, df: pd.DataFrame, col_name:str, human_list_path: str = "") -> str:
+def extract_human_tags(
+    text: str, df: pd.DataFrame, col_name: str, human_list_path: str = ""
+) -> str:
     """
     df의 tags column에서 사람 태그만 남긴다.
 
@@ -282,7 +198,7 @@ def extract_human_tags(text: str, df: pd.DataFrame, col_name:str, human_list_pat
     return " ".join(result)
 
 
-def str_list(df: pd.DataFrame, col_name:str) -> list:
+def str_list(df: pd.DataFrame, col_name: str, split:bool=True) -> list:
     """
     DataFrame의 tags column을 입력받아, 해시태그 단위로 분리된 문자열이 담긴 리스트를 반환한다.
 
@@ -296,11 +212,13 @@ def str_list(df: pd.DataFrame, col_name:str) -> list:
     """
     tags_list = []
     for text in df[col_name]:
+        if split:
+            text = text.split()
         tags_list += text
     return tags_list
 
 
-def most_used_str_list(df: pd.DataFrame, col_name:str) -> list:
+def most_used_str_list(df: pd.DataFrame, col_name: str) -> list:
     """
     평균 이상으로 사용된 해시태그의 리스트를 반환한다.
 
@@ -318,7 +236,7 @@ def most_used_str_list(df: pd.DataFrame, col_name:str) -> list:
     return most_used_hash_list
 
 
-def most_used_str_df(df: pd.DataFrame, col_name:str) -> pd.DataFrame:
+def most_used_str_df(df: pd.DataFrame, col_name: str) -> pd.DataFrame:
     """
     평균 이상으로 사용된 해시태그가 포함된 row의 DataFrame을 반환한다.
 
@@ -481,39 +399,76 @@ def get_video_statistics(df_videos: pd.DataFrame, df_comments: pd.DataFrame) -> 
     return dict_video_views, dict_video_like, dict_video_comment
 
 
-def encoded_human_dict(df:pd.DataFrame) -> dict:
+def encoded_human_dict(df: pd.DataFrame) -> dict:
+    """
+    DataFrame 형태로 들어온 데이터의 "tags" column을 가지고 각 태그들을 인코딩하여
+    dictionary 형태로 반환하는 함수입니다.
+
+    Args:
+    - df_videos (pandas.DataFrame) : 'tags' column에 사람에 대한 해시태그만 남겨진 데이터프레임입니다.
+
+    Returns:
+    - dict : {해시태그 : 숫자} 쌍으로 구성된 딕셔너리를 반환한다.
+    """
+    # 빈 리스트 생성
     new_list = []
+    # 데이터프레임을 복사하여 index reset
     df_copy = df.copy().reset_index(drop=True)
+    # 새로운 열 "encoded_tags"를 NaN 값으로 추가
     df_copy["encoded_tags"] = np.nan
 
+    # 각 행의 "tags" column에서 unique한 값들에 대해 loop 실행
     for human in df_copy.tags.unique():
+        # "tags" column에서 공백을 기준으로 나누어서 리스트에 추가
         temp_list = human.split(" ")
         new_list += temp_list
 
+    # 중복 제거
     new_list = list(set(new_list))
 
+    # LabelEncoder를 이용하여 각 태그 인코딩
     encoder = LabelEncoder()
     encoded_list = encoder.fit_transform(new_list)
+
+    # 딕셔너리 형태로 변환
     list_dict = dict(zip(new_list, encoded_list))
 
-    return  list_dict
+    # 딕셔너리 반환
+    return list_dict
 
 
-def encoded_human_df(df:pd.DataFrame, creator:str) -> pd.DataFrame:
+def encoded_human_df(df: pd.DataFrame, creator: str) -> pd.DataFrame:
+    """
+    DataFrame 형태로 들어온 데이터의 "tags" column을 가지고 각 태그들을 인코딩하여
+    인코딩된 태그들을 원래 DataFrame에 추가한 후 반환하는 함수입니다.
+
+    Args:
+    - df_videos (pandas.DataFrame) : 인코딩할 데이터프레임입니다.
+    - creator (str) : 비디오 제작자의 이름입니다.
+
+    Returns:
+    - pandas.DataFrame : 인코딩된 데이터프레임을 반환합니다.
+    """
+    # 데이터프레임을 복사하여 index reset
     df_copy = df.copy().reset_index(drop=True)
+    # 새로운 열 "human_count_class"와 "encoded_tags"를 NaN 값으로 추가
     df_copy["human_count_class"] = np.nan
     df_copy["encoded_tags"] = np.nan
+    # encoded_human_dict 함수를 통해 태그들을 인코딩한 dictionary 생성
     list_dict = encoded_human_dict(df)
 
-    # "encoded_tags" 컬럼의 데이터 타입을 object로 변경합니다.
+    # "encoded_tags" 컬럼의 데이터 타입을 object로 변경
     df_copy["encoded_tags"] = df_copy["encoded_tags"].astype(object)
 
+    # 각 행의 "tags" column에서 loop 실행
     for idx, humans in enumerate(df_copy.tags.values):
         temp_list = []
         for human in humans.split(" "):
+            # 각 인물에 대한 인코딩된 태그 리스트 생성
             temp_list.append(list_dict[human])
-        df_copy['encoded_tags'][idx] = temp_list
-    
+        df_copy["encoded_tags"][idx] = temp_list
+
+    # 인물이 등장하는 횟수에 따라서 "human_count_class" 열 생성
     for idx, enc_tags in enumerate(df_copy.encoded_tags.values):
         if enc_tags[0] == list_dict[creator]:
             df_copy.human_count_class[idx] = 0
@@ -522,44 +477,70 @@ def encoded_human_df(df:pd.DataFrame, creator:str) -> pd.DataFrame:
             df_copy.human_count_class[idx] = 1
         else:
             df_copy.human_count_class[idx] = 2
+    # "human_count_class" 열의 데이터 타입을 int로 변경
     df_copy.human_count_class = df_copy.human_count_class.astype(int)
-    
+
+    # 인코딩된 데이터프레임 반환
     return df_copy
 
 
+def split_df_by_habang(df: pd.DataFrame) -> tuple:
+    """
+    주어진 DataFrame을 해시태그의 인원수 단위로 나눈 DataFrame을 반환한다.
 
-def split_df_by_habang(df:pd.DataFrame) -> pd.DataFrame:
+    Args:
+    - df_videos (pandas.DataFrame) : 사람 해시태그만 존재하는 데이터프레임을 인자로 받는다.
+
+    Returns:
+    - pandas.DataFrame : 혼자 / 1인과 같이 / 2인 이상과 같이 합방한 DataFrame 세 개를 tuple로 묶어 반환한다.
+    """
+    # 'encoded_tags' 값이 [25]인 row는 '해방군'으로 분류합니다.
     none_df = df.loc[df.encoded_tags.apply(lambda x: x == [25])]
+
+    # 'encoded_tags' 값이 [25]가 아닌 row는 나머지 두 그룹에 속합니다.
     habang_upper1_df = df.drop(none_df.index)
+
+    # 'habang_upper1_df'를 복사한 DataFrame을 만들어 '민족군(2차)'를 만듭니다.
     habang_upper2_df = habang_upper1_df.copy().reset_index(drop=True)
-    
+
+    # 'habang_upper1_df'에서 '민족군(1차)'에 속하는 row를 찾아서 temp_index에 저장합니다.
     temp_index = []
     for idx, value in enumerate(habang_upper1_df.encoded_tags.values):
         if len(value) == 1:
-            temp_index += habang_upper1_df.loc[habang_upper1_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
-        
+            temp_index += habang_upper1_df.loc[
+                habang_upper1_df.encoded_tags.apply(lambda x: x == value)
+            ].index.tolist()
+
     temp_index = list(set(temp_index))
     habang_upper1_df = habang_upper1_df.loc[temp_index]
 
+    # 'habang_upper2_df'에서 '민족군(2차)'에 속하는 row를 찾아서 temp_index에 저장합니다.
     temp_index = []
     for idx, value in enumerate(habang_upper2_df.encoded_tags.values):
         if len(value) >= 2:
-            temp_index += habang_upper2_df.loc[habang_upper2_df.encoded_tags.apply(lambda x: x == value)].index.tolist()
-    
+            temp_index += habang_upper2_df.loc[
+                habang_upper2_df.encoded_tags.apply(lambda x: x == value)
+            ].index.tolist()
+
     temp_index = list(set(temp_index))
     habang_upper2_df = habang_upper2_df.loc[temp_index]
+
+    # 'habang_upper2_df'에서 'tags' column 값을 정렬하고 다시 합쳐줍니다.
     habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: x.split(" "))
     habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: sorted(x))
     habang_upper2_df.tags = habang_upper2_df.tags.apply(lambda x: " ".join(x))
 
     return none_df, habang_upper1_df, habang_upper2_df
 
-def unique_video_id_to_dict(df:pd.DataFrame) -> dict:
+
+def unique_video_id_to_dict(df: pd.DataFrame) -> dict:
     unique_video_id = df.video_id.unique()
     unique_video_id_like_count_dict = dict()
 
     for video_id in unique_video_id:
-        unique_video_id_like_count_dict[video_id] = df.loc[df.video_id == video_id].like_count.sum()
+        unique_video_id_like_count_dict[video_id] = df.loc[
+            df.video_id == video_id
+        ].like_count.sum()
 
     return unique_video_id_like_count_dict
 
@@ -568,7 +549,9 @@ def video_on_like_count_sum(df):
     # 비디오별 댓글 좋아요 수
     unique_video_id_like_count_dict = unique_video_id_to_dict(df)
     # 내림차순 정렬
-    comments_like_sum = sorted(unique_video_id_like_count_dict.items(), key=lambda x:x[1], reverse=True)
+    comments_like_sum = sorted(
+        unique_video_id_like_count_dict.items(), key=lambda x: x[1], reverse=True
+    )
 
     video_on_comments_like_sum = list()
 
@@ -580,12 +563,66 @@ def video_on_like_count_sum(df):
     return video_on_comments_like_sum
 
 
-
 def created_df(df) -> list:
     new_df = list()
-    stop_words = stopwords('./데이터/stopwords.txt')
+    stop_words = stopwords("./데이터/stopwords.txt")
     video_on_comments_like_sum = video_on_like_count_sum(df)
     for video_id in tqdm(video_on_comments_like_sum):
-        new_df.append(df.loc[df.video_id == video_id[0]].comment.apply(lambda x : text_cleaning(x, stop_words)))
+        new_df.append(
+            df.loc[df.video_id == video_id[0]].comment.apply(
+                lambda x: text_cleaning(x, stop_words)
+            )
+        )
     return new_df
 
+
+def word_count_stop_df(
+    splited_df: pd.DataFrame, video_id: str = "", stopwords: list = []
+) -> pd.DataFrame:
+    """
+    주어진 데이터프레임에서 특정 video_id에 해당하는 댓글들을 가져와서 불용어(stopwords)를 제외하고 반환하는 함수.
+
+    :param splited_df: 댓글이 split 된 데이터프레임.
+    :param video_id: 가져오고자 하는 댓글이 속한 동영상의 video_id.
+    :param stopwords: 불용어(stopwords) 리스트.
+    :return: 불용어를 제외한 댓글들이 있는 데이터프레임.
+    """
+
+    # video_id에 해당하는 댓글만 추출
+    new_chim_df = splited_df.loc[splited_df.video_id == video_id].reset_index(drop=True)
+
+    # 불용어(stopwords) 제거
+    for idx, comments in enumerate(new_chim_df.comment):
+        new_list = []
+        for comment in comments:
+            if comment not in stopwords:
+                new_list.append(comment)
+        new_chim_df.comment[idx] = new_list
+
+    # 댓글이 없는 경우 제거
+    for idx, comments in enumerate(new_chim_df.comment):
+        if not comments:
+            new_chim_df.drop(idx, inplace=True)
+
+    return new_chim_df
+
+
+def word_freq(word_count_stop_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    주어진 데이터프레임에서 각 댓글의 단어 출현 빈도수를 계산하는 함수.
+
+    Args:
+    - word_count_stop_df : pd.DataFrame : 댓글과 같은 텍스트 데이터를 가진 데이터프레임
+
+    Returns:
+    - new_df : pd.DataFrame : 각 단어와 출현 빈도수가 기록된 새로운 데이터프레임
+    """
+    comm_map_second = Counter(str_list(word_count_stop_df, "comment", False))
+
+    new_df = pd.DataFrame(
+        {
+            "word": list(comm_map_second.keys()),
+            "count": list(comm_map_second.values()),
+        }
+    )
+    return new_df
