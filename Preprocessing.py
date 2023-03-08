@@ -494,19 +494,15 @@ def split_df_by_habang(df: pd.DataFrame) -> tuple:
     Returns:
     - pandas.DataFrame : 혼자 / 1인과 같이 / 2인 이상과 같이 합방한 DataFrame 세 개를 tuple로 묶어 반환한다.
     """
-    # 'encoded_tags' 값이 [25]인 row는 '해방군'으로 분류합니다.
-    none_df = df.loc[df.encoded_tags.apply(lambda x: x == [25])]
-
-    # 'encoded_tags' 값이 [25]가 아닌 row는 나머지 두 그룹에 속합니다.
-    habang_upper1_df = df.drop(none_df.index)
-
-    # 'habang_upper1_df'를 복사한 DataFrame을 만들어 '민족군(2차)'를 만듭니다.
+    # 혼자 / 1인과 같이 / 2인 이상과 같이 방송을 진행한 df를 생성.
+    none_df = df.loc[df.encoded_tags.apply(lambda x: x == [24])]
+    habang_upper1_df = df.drop(none_df.index).reset_index(drop=True)
     habang_upper2_df = habang_upper1_df.copy().reset_index(drop=True)
 
     # 'habang_upper1_df'에서 '민족군(1차)'에 속하는 row를 찾아서 temp_index에 저장합니다.
     temp_index = []
-    for idx, value in enumerate(habang_upper1_df.encoded_tags.values):
-        if len(value) == 1:
+    for value in habang_upper1_df.encoded_tags.values:
+        if len(value) == 1:     # 1인과 같이 방송을 진행했다면,
             temp_index += habang_upper1_df.loc[
                 habang_upper1_df.encoded_tags.apply(lambda x: x == value)
             ].index.tolist()
@@ -517,7 +513,7 @@ def split_df_by_habang(df: pd.DataFrame) -> tuple:
     # 'habang_upper2_df'에서 '민족군(2차)'에 속하는 row를 찾아서 temp_index에 저장합니다.
     temp_index = []
     for idx, value in enumerate(habang_upper2_df.encoded_tags.values):
-        if len(value) >= 2:
+        if len(value) >= 2:     # 2인 이상과 같이 방송을 진행했다면,
             temp_index += habang_upper2_df.loc[
                 habang_upper2_df.encoded_tags.apply(lambda x: x == value)
             ].index.tolist()
