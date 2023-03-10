@@ -60,8 +60,7 @@ cover/
 *.pot
 *.text
 *.txt
-
-
+*.jfif
 
 # Django stuff:
 *.log
